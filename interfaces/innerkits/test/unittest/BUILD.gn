@@ -45,8 +45,41 @@ ohos_unittest("standby_client_unit_test") {
   part_name = "${standby_service_part_name}"
 }
 
+ohos_unittest("mock_standby_client_unit_test") {
+  module_out_path = module_output_path
+  cflags_cc = [
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  include_dirs = [ "${standby_innerkits_path}/include" ]
+
+  sources = [
+    "${standby_innerkits_path}/test/unittest/mock/mock_sa_service.cpp",
+    "${standby_innerkits_path}/test/unittest/mock_standby_client_unit_test.cpp",
+  ]
+
+  deps = [ "${standby_innerkits_path}:standby_innerkits" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:wantagent_innerkits",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+  ]
+
+  subsystem_name = "resourceschedule"
+  part_name = "${standby_service_part_name}"
+}
+
 group("unittest") {
   testonly = true
 
-  deps = [ ":standby_client_unit_test" ]
+  deps = [
+    ":standby_client_unit_test",
+    ":mock_standby_client_unit_test",
+  ]
 }

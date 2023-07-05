@@ -19,11 +19,24 @@
 #include "bundle_manager_helper.h"
 #include "common_event_observer.h"
 
-namespace OHOS {
-namespace DevStandbyMgr {
 namespace {
     static constexpr char TEST_DEFAULT_BUNDLE[]  = "bundleName";
+    bool g_mockGetAllRunningProcesses = true;
+    bool g_mockGetRunningSystemProcess = true;
 }
+
+void MockGetAllRunningProcesses(bool mockRet)
+{
+    g_mockGetAllRunningProcesses = mockRet;
+}
+
+void MockGetRunningSystemProcess(bool mockRet)
+{
+    g_mockGetRunningSystemProcess = mockRet;
+}
+
+namespace OHOS {
+namespace DevStandbyMgr {
 
 uint64_t TimedTask::CreateTimer(bool repeat, uint64_t interval, bool isExact, const std::function<void()>& callBack)
 {
@@ -35,22 +48,16 @@ bool TimedTask::StartDayNightSwitchTimer(uint64_t& timeId)
     return true;
 }
 
-bool TimedTask::RegisterDayNightSwitchTimer(uint64_t& timeId, bool repeat, uint64_t interval,
-    const std::function<void()>& callBack)
-{
-    return true;
-}
-
 bool AbilityManagerHelper::GetRunningSystemProcess(std::list<SystemProcessInfo>& systemProcessInfos)
 {
     systemProcessInfos.emplace_back(SystemProcessInfo{});
-    return true;
+    return g_mockGetRunningSystemProcess;
 }
 
 bool AppMgrHelper::GetAllRunningProcesses(std::vector<AppExecFwk::RunningProcessInfo>& allAppProcessInfos)
 {
     allAppProcessInfos.emplace_back(AppExecFwk::RunningProcessInfo{});
-    return true;
+    return g_mockGetAllRunningProcesses;
 }
 
 bool AppMgrHelper::Connect()

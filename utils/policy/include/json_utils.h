@@ -22,7 +22,6 @@
 #include "standby_service_errors.h"
 #include "standby_service_log.h"
 
-
 namespace OHOS {
 namespace DevStandbyMgr {
 class JsonUtils {

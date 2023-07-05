@@ -47,6 +47,7 @@ HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_001, TestSiz
     sptr<IStandbyServiceSubscriber> nullSubscriber = nullptr;
     EXPECT_NE(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(nullSubscriber), ERR_OK);
     EXPECT_NE(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(nullSubscriber), ERR_OK);
+    StandbyServiceClient::GetInstance().UnsubscribeStandbyCallback(nullSubscriber);
     sptr<IStandbyServiceSubscriber> subscriber = new (std::nothrow) StandbyServiceSubscriberStub();
     EXPECT_NE(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(subscriber), ERR_OK);
     StandbyServiceClient::GetInstance().SubscribeStandbyCallback(subscriber);
@@ -89,6 +90,8 @@ HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_003, TestSiz
     EXPECT_EQ(StandbyServiceClient::GetInstance().GetAllowList(AllowType::NET, allowInfoList, 0), ERR_OK);
     EXPECT_NE(StandbyServiceClient::GetInstance().GetAllowList(0, allowInfoList, 0), ERR_OK);
     EXPECT_EQ(StandbyServiceClient::GetInstance().GetAllowList((1 << 6), allowInfoList, 0), ERR_OK);
+    allowInfoList.emplace_back(AllowInfo {});
+    StandbyServiceClient::GetInstance().GetAllowList((1 << 6), allowInfoList, 0);
 }
 
 /**
@@ -101,6 +104,85 @@ HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_004, TestSiz
 {
     bool isStandby {false};
     EXPECT_EQ(StandbyServiceClient::GetInstance().IsDeviceInStandby(isStandby), ERR_OK);
+}
+
+/**
+ * @tc.name: StandbyServiceClientUnitTest_005
+ * @tc.desc: test Unmarshalling.
+ * @tc.type: FUNC
+ * @tc.require: AR000HQ76V
+ */
+HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_005, TestSize.Level1)
+{
+    MessageParcel data;
+    EXPECT_EQ(AllowInfo::Unmarshalling(data), nullptr);
+    EXPECT_EQ(ResourceRequest::Unmarshalling(data), nullptr);
+}
+
+/**
+ * @tc.name: StandbyServiceClientUnitTest_006
+ * @tc.desc: test ResetStandbyServiceClient.
+ * @tc.type: FUNC
+ * @tc.require: AR000HQ76V
+ */
+HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_006, TestSize.Level1)
+{
+    StandbyServiceClient::GetInstance().ResetStandbyServiceClient();
+    StandbyServiceClient::GetInstance().ResetStandbyServiceClient();
+    StandbyServiceClient::GetInstance().GetStandbyServiceProxy();
+    StandbyServiceClient::GetInstance().ResetStandbyServiceClient();
+    EXPECT_EQ(StandbyServiceClient::GetInstance().standbyServiceProxy_, nullptr);
+}
+
+/**
+ * @tc.name: StandbyServiceClientUnitTest_007
+ * @tc.desc: test StandbyServiceSubscriberStub.
+ * @tc.type: FUNC
+ * @tc.require: AR000HQ76V
+ */
+HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_007, TestSize.Level1)
+{
+    sptr<StandbyServiceSubscriberStub> subscriber = new (std::nothrow) StandbyServiceSubscriberStub();
+    MessageParcel data {};
+    MessageParcel reply {};
+    MessageOption option {};
+    subscriber->OnRemoteRequestInner(StandbyServiceSubscriberStub::ON_ALLOW_LIST_CHANGED, data, reply, option);
+    subscriber->OnRemoteRequestInner(StandbyServiceSubscriberStub::ON_ALLOW_LIST_CHANGED + 1, data, reply, option);
+    EXPECT_NE(subscriber->HandleOnDeviceIdleMode(data), ERR_OK);
+    subscriber->HandleOnAllowListChanged(data);
+    data.WriteBool(false);
+    subscriber->HandleOnDeviceIdleMode(data);
+    data.WriteBool(false);
+    subscriber->HandleOnDeviceIdleMode(data);
+    subscriber->HandleOnAllowListChanged(data);
+    MessageParcel allowListData {};
+    subscriber->HandleOnAllowListChanged(allowListData);
+    allowListData.WriteInt32(0);
+    subscriber->HandleOnAllowListChanged(allowListData);
+    allowListData.WriteInt32(0);
+    subscriber->HandleOnAllowListChanged(allowListData);
+    allowListData.WriteString("");
+    subscriber->HandleOnAllowListChanged(allowListData);
+    allowListData.WriteUint32(0);
+    subscriber->HandleOnAllowListChanged(allowListData);
+    allowListData.WriteBool(false);
+    subscriber->HandleOnAllowListChanged(allowListData);
+}
+
+/**
+ * @tc.name: StandbyServiceClientUnitTest_008
+ * @tc.desc: test StandbyServiceProxy.
+ * @tc.type: FUNC
+ * @tc.require: AR000HQ76V
+ */
+HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_008, TestSize.Level1)
+{
+    sptr<IRemoteObject> impl {};
+    sptr<StandbyServiceProxy> proxy = new (std::nothrow) StandbyServiceProxy(impl);
+    sptr<IStandbyServiceSubscriber> nullSubscriber = nullptr;
+    EXPECT_NE(proxy->SubscribeStandbyCallback(nullSubscriber), ERR_OK);
+    EXPECT_NE(proxy->SubscribeStandbyCallback(nullSubscriber), ERR_OK);
+    proxy->UnsubscribeStandbyCallback(nullSubscriber);
 }
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

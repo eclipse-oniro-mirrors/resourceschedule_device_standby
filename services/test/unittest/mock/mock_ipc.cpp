@@ -14,6 +14,23 @@
  */
 
 #include "ipc_skeleton.h"
+#include "time_service_client.h"
+#include "accesstoken_kit.h"
+
+namespace {
+    bool g_mockStartTimer = true;
+    bool g_mockGetTokenTypeFlag = true;
+}
+
+void MockStartTimer(bool mockRet)
+{
+    g_mockStartTimer = mockRet;
+}
+
+void MockGetTokenTypeFlag(bool mockRet)
+{
+    g_mockGetTokenTypeFlag = mockRet;
+}
 
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
@@ -29,5 +46,39 @@ int32_t IPCSkeleton::GetCallingPid()
 {
     int32_t pid = 1;
     return pid;
+}
+
+namespace MiscServices {
+bool TimeServiceClient::StartTimer(uint64_t timerId, uint64_t triggerTime)
+{
+    return g_mockStartTimer;
+}
+
+bool TimeServiceClient::StopTimer(uint64_t timerId)
+{
+    return g_mockStartTimer;
+}
+
+uint64_t TimeServiceClient::CreateTimer(std::shared_ptr<ITimerInfo> TimerOptions)
+{
+    return g_mockStartTimer;
+}
+
+bool TimeServiceClient::DestroyTimer(uint64_t timerId)
+{
+    return g_mockStartTimer;
+}
+} // namespace MiscServices
+
+namespace Security {
+namespace AccessToken {
+ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
+{
+    if (g_mockGetTokenTypeFlag) {
+        return TypeATokenTypeEnum::TOKEN_SHELL;
+    }
+    return TypeATokenTypeEnum::TOKEN_HAP;
+}
+}
 }
 }  // namespace OHOS
