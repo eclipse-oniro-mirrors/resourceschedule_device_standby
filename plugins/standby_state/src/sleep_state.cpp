@@ -185,7 +185,7 @@ void SleepState::ShellDump(const std::vector<std::string>& argsInStr, std::strin
             StartPeriodlyMotionDetection();
             handler_->PostTask([this]() {
                 STANDBYSERVICE_LOGD("after 100ms, stop sensor");
-                stateManager_.lock()->EndEvalCurrentState(false);;
+                stateManager_.lock()->EndEvalCurrentState(false);
                 }, DUMP_REPEAT_DETECTION_TIMEOUT);
             result += "finished start repeated sensor\n";
         }

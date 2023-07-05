@@ -32,7 +32,8 @@ public:
     bool UnInit() override;
     ErrCode StartEvalution(const ConstraintEvalParam& params) override;
     ErrCode StopEvalution() override;
-    void RegisterConstraintCallback(const ConstraintEvalParam& params, const std::shared_ptr<IConstraintMonitor>& monitor) override;
+    void RegisterConstraintCallback(const ConstraintEvalParam& params, const std::shared_ptr<
+        IConstraintMonitor>& monitor) override;
     void ShellDump(const std::vector<std::string>& argsInStr, std::string& result) override;
 
 private:

@@ -33,6 +33,11 @@
 
 namespace OHOS {
 namespace DevStandbyMgr {
+namespace {
+    const uint32_t THREE_BYTES_LEN = 24;
+    const uint32_t TWO_BYTES_LEN = 16;
+    const uint32_t ONE_BYTE_LEN = 8;
+}
 
 struct ConstraintEvalParam {
     uint32_t curState_ {0};
@@ -43,12 +48,14 @@ struct ConstraintEvalParam {
     ConstraintEvalParam() = default;
     ConstraintEvalParam(uint32_t curState, uint32_t curPhase, uint32_t nextState, uint32_t nextPhase)
         : curState_(curState), curPhase_(curPhase), nextState_(nextState), nextPhase_(nextPhase) {}
-    inline uint32_t GetHashValue() const {
+    inline uint32_t GetHashValue() const
+    {
+        uint32_t res = (curState_ << THREE_BYTES_LEN) + (curPhase_ << TWO_BYTES_LEN) +
+            (nextState_ << ONE_BYTE_LEN) + (nextPhase_ << 1);
         if (isRepeatedDetection_) {
-            return (curState_ << 24) + (curPhase_ << 16) + (nextState_ << 8) + (nextPhase_ << 1) + 1;
-        } else {
-            return (curState_ << 24) + (curPhase_ << 16) + (nextState_ << 8) + (nextPhase_ << 1);
+            return res + 1;
         }
+        return res;
     }
 };
 

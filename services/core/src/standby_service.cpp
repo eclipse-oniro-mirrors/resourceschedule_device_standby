@@ -52,7 +52,7 @@ StandbyService::~StandbyService() {}
 
 void StandbyService::OnStart()
 {
-    if (!SOFTWARE_SLEEP) {
+    if (!g_softwareSleep) {
         return;
     }
     if (state_ == ServiceRunningState::STATE_RUNNING) {

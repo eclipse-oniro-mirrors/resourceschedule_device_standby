@@ -161,8 +161,8 @@ bool StandbyConfigManager::GetHalfHourSwitch(const std::string& switchName)
     return GetConfigWithName(switchName, halfhourSwitchMap_);
 }
 
-std::shared_ptr<std::vector<DefaultResourceConfig>>
-    StandbyConfigManager::GetResCtrlConfig(const std::string& switchName)
+std::shared_ptr<std::vector<DefaultResourceConfig>> StandbyConfigManager::GetResCtrlConfig(const
+    std::string& switchName)
 {
     return GetConfigWithName(switchName, defaultResourceConfigMap_);
 }

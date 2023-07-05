@@ -266,7 +266,7 @@ void StateManagerAdapter::DumpActivateMotion(const std::vector<std::string>& arg
             STANDBYSERVICE_LOGD("after 3000ms, stop sensor");
             this->EndEvalCurrentState(false);
             }, MOTION_DETECTION_TIMEOUT);
-        result += "finished start periodly sensor\n";;
+        result += "finished start periodly sensor\n";
     }
 }
 }  // namespace DevStandbyMgr

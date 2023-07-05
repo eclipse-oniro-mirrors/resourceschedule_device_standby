@@ -27,7 +27,9 @@ namespace {
     constexpr int32_t NIGHT_ENTRANCE_MIN = 45;
     constexpr int32_t DAY_ENTRANCE_HOUR = 6;
     constexpr int32_t DAY_ENTRANCE_MIN = 0;
-    const std::vector<int32_t> NAP_TIMEOUT_LIST = {20, 15, 15, 10};
+    constexpr int32_t TWENTY_MIN_ENTRANCE_MIN = 20;
+    constexpr int32_t QUARTER_MIN_ENTRANCE_MIN = 15;
+    constexpr int32_t TEN_MIN_ENTRANCE_MIN = 10;
     constexpr int32_t NIGHT_TWENTY_TWO_CLOCK = 22;
     constexpr int32_t NIGHT_TWENTY_THREE_CLOCK = 23;
     constexpr int32_t NIGHT_FIVE_CLOCK = 5;
@@ -101,18 +103,18 @@ bool TimeProvider::DiffToFixedClock(int64_t curTimeStamp, int32_t tmHour, int32_
 int64_t TimeProvider::GetNapTimeOut()
 {
     int64_t curSecTimeStamp = MiscServices::TimeServiceClient::GetInstance()->GetWallTimeMs() / MSEC_PER_SEC;
-    int32_t napTimeOut = NAP_TIMEOUT_LIST[0];
+    int32_t napTimeOut = TWENTY_MIN_ENTRANCE_MIN;
     struct tm curLocalTime {};
     if (!ConvertTimeStampToLocalTime(curSecTimeStamp, curLocalTime)) {
-        return napTimeOut * MSEC_PER_MIN;;
+        return napTimeOut * MSEC_PER_MIN;
     }
     if (curLocalTime.tm_hour == NIGHT_TWENTY_TWO_CLOCK) {
-        napTimeOut = NAP_TIMEOUT_LIST[1];
+        napTimeOut = QUARTER_MIN_ENTRANCE_MIN;
     } else if (curLocalTime.tm_hour == NIGHT_TWENTY_THREE_CLOCK && curLocalTime.tm_min < THREE_QUARTERS) {
-        napTimeOut = NAP_TIMEOUT_LIST[2];
+        napTimeOut = QUARTER_MIN_ENTRANCE_MIN;
     } else if (curLocalTime.tm_hour >= NIGHT_TWENTY_THREE_CLOCK || curLocalTime.tm_hour < NIGHT_FIVE_CLOCK ||
         (curLocalTime.tm_hour == NIGHT_FIVE_CLOCK && curLocalTime.tm_min < THREE_QUARTERS)) {
-        napTimeOut = NAP_TIMEOUT_LIST[3];
+        napTimeOut = TEN_MIN_ENTRANCE_MIN;
     }
     return napTimeOut * MSEC_PER_MIN;
 }

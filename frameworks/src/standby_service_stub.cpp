@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace DevStandbyMgr {
-const std::map<uint32_t, std::function<ErrCode(StandbyServiceStub *, MessageParcel& , MessageParcel&)>>
+const std::map<uint32_t, std::function<ErrCode(StandbyServiceStub*, MessageParcel&, MessageParcel&)>>
     StandbyServiceStub::interfaces_ = {
         {StandbyServiceStub::SUBSCRIBE_STANDBY_CALLBACK,
             std::bind(&StandbyServiceStub::HandleSubscribeStandbyCallback,

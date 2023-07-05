@@ -21,7 +21,7 @@ const std::string TRANSIT_NEXT_STATE_TIMED_TASK = "TransitNextStateTimedTask";
 const std::string TRANSIT_NEXT_PHASE_INSTANT_TASK = "TransitNextPhaseInstantTask";
 const std::string REPEATED_MOTION_DETECTION_TASK = "MotionDetectionPeriodlyTask";
 
-extern const std::string DEFAULT_PLUGIN_NAME = "libstandby_plugin.z.so";
+const std::string DEFAULT_PLUGIN_NAME = "libstandby_plugin.z.so";
 const int32_t RETRY_INTERVAL = 10 * 1000;
 const int32_t REPEATED_MOTION_DETECTION_INTERVAL = 10 * 60 * 1000;
 const std::string DARK_TIMEOUT = "dark_timeout";

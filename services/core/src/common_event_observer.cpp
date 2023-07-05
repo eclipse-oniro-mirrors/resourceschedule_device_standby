@@ -57,9 +57,9 @@ void CommonEventObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventD
         action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_FULLY_REMOVED) {
         std::string bundleName = want.GetElement().GetBundleName();
         int32_t uid = want.GetIntParam(AppExecFwk::Constants::UID, -1);
-        handler_->PostTask([uid, bundleName]() { StandbyServiceImpl::GetInstance()->
-            RemoveAppAllowRecord(uid, bundleName, true);
-        });
+        handler_->PostTask([uid, bundleName]() {
+            StandbyServiceImpl::GetInstance()->RemoveAppAllowRecord(uid, bundleName, true);
+            });
     } else {
         handler_->PostTask([]() { StandbyServiceImpl::GetInstance()->ResetTimeObserver(); });
     }

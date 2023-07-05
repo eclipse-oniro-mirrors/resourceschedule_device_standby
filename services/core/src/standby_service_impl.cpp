@@ -567,7 +567,7 @@ ErrCode StandbyServiceImpl::UnapplyAllowResource(const sptr<ResourceRequest>& re
     }
     handler_->PostTask([this, resourceRequest]() {
         this->UnapplyAllowResInner(resourceRequest->GetUid(),
-        resourceRequest->GetName(), resourceRequest->GetAllowType(), true);
+            resourceRequest->GetName(), resourceRequest->GetAllowType(), true);
         }, AppExecFwk::EventQueue::Priority::HIGH);
     return ERR_OK;
 }
@@ -838,14 +838,15 @@ void StandbyServiceImpl::DumpModifyAllowList(const std::vector<std::string>& arg
     }
     int32_t uid = std::atoi(argsInStr[2].c_str());
     std::string name = argsInStr[3];
-    uint32_t allowType = std::atoi(argsInStr[4].c_str());
     if (argsInStr[1] == "--apply") {
+        uint32_t allowType = std::atoi(argsInStr[4].c_str());
         int32_t duration = std::atoi(argsInStr[5].c_str());
         sptr<ResourceRequest> resourceRequest = new (std::nothrow) ResourceRequest(allowType,
             uid, name, duration, "dump", std::atoi(argsInStr[6].c_str()));
         ApplyAllowResource(resourceRequest);
         result += "add one object to allow list\n";
     } else if (argsInStr[1] == "--unapply") {
+        uint32_t allowType = std::atoi(argsInStr[4].c_str());
         sptr<ResourceRequest> resourceRequest = new (std::nothrow) ResourceRequest(allowType,
             uid, name, 0, "dump", std::atoi(argsInStr[6].c_str()));
         UnapplyAllowResource(resourceRequest);

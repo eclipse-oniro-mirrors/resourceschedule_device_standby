@@ -100,8 +100,6 @@ public:
 private:
     static bool CreateNodeFile(const std::string &filePath);
     static bool GetFileContent(const std::string& filePath, std::string& content);
-    // static bool ParsePowerOffConfig(DevSleepInfo& devSleepInfo);
-    // static bool ParseStandByConfig(nlohmann::json& root, DevSleepInfo& devSleepInfo);
 };
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

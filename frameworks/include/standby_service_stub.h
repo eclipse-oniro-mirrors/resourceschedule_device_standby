@@ -44,7 +44,7 @@ public:
 
 private:
     static const std::map<uint32_t,
-        std::function<ErrCode(StandbyServiceStub *, MessageParcel& , MessageParcel& )>> interfaces_;
+        std::function<ErrCode(StandbyServiceStub*, MessageParcel&, MessageParcel&)>> interfaces_;
     ErrCode HandleSubscribeStandbyCallback(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleUnsubscribeStandbyCallback(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleApplyAllowResource(MessageParcel& data, MessageParcel& reply);

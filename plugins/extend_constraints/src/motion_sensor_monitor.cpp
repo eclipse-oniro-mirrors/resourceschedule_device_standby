@@ -55,7 +55,7 @@ void MotionSensorMonitor::AcceleromterCallback(SensorEvent *event)
     if (event == NULL) {
         return;
     }
-    AccelData* sensorData = (AccelData*)event->data;
+    AccelData* sensorData = reinterpret_cast<AccelData*>(event->data);
     MotionSensorMonitor::AddEnergy(sensorData);
     STANDBYSERVICE_LOGD("sensor motion: %{public}lf, threshold: %{public}d", MotionSensorMonitor::GetEnergy(),
         StandbyConfigManager::GetInstance()->GetStandbyParam(MOTION_THREADSHOLD));
@@ -73,7 +73,7 @@ void MotionSensorMonitor::RepeatAcceleromterCallback(SensorEvent *event)
         return;
     }
     STANDBYSERVICE_LOGD("periodly receive Acceleromter motion sensor callback");
-    AccelData* sensorData = (AccelData*)event->data;
+    AccelData* sensorData = reinterpret_cast<AccelData*>(event->data);
     MotionSensorMonitor::AddEnergy(sensorData);
     STANDBYSERVICE_LOGD("sensor motion: %{public}lf, threshold: %{public}lf", MotionSensorMonitor::GetEnergy(),
         StandbyConfigManager::GetInstance()->GetStandbyParam(MOTION_THREADSHOLD) * 1.0 / COUNT_TIMES);

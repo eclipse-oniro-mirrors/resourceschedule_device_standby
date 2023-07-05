@@ -30,7 +30,7 @@ enum class DeviceType : uint32_t {
     IVI,
 };
 
-extern bool SOFTWARE_SLEEP;
+extern bool g_softwareSleep;
 extern const DeviceType DEVICE_TYPE;
 
 DeviceType GetDeviceType();
