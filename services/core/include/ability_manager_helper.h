@@ -35,7 +35,7 @@ DECLARE_SINGLE_INSTANCE(AbilityManagerHelper);
 public:
     bool GetRunningSystemProcess(std::list<SystemProcessInfo>& systemProcessInfos);
 private:
-    sptr<ISystemAbilityManager> abilityManagerProxy_ {nullptr};
+    std::mutex mutex_ {};
 };
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

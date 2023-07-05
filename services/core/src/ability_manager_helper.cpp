@@ -34,6 +34,7 @@ AbilityManagerHelper::~AbilityManagerHelper()
 
 bool WEAK_FUNC AbilityManagerHelper::GetRunningSystemProcess(std::list<SystemProcessInfo>& systemProcessInfos)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto ret = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager()->
         GetRunningSystemProcess(systemProcessInfos);
     if (ret != ERR_OK)  {

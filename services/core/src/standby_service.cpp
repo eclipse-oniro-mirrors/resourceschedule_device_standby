@@ -84,6 +84,7 @@ void StandbyService::OnStart()
 void StandbyService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     STANDBYSERVICE_LOGI("add system ability, systemAbilityId : %{public}d", systemAbilityId);
+    std::lock_guard<std::mutex> systemAbilityLock(systemAbilityLock_);
     switch (systemAbilityId) {
         case COMMON_EVENT_SERVICE_ID:
             STANDBYSERVICE_LOGI("common event service is ready!");
@@ -129,6 +130,7 @@ void StandbyService::OnAddSystemAbility(int32_t systemAbilityId, const std::stri
 void StandbyService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     STANDBYSERVICE_LOGI("remove system ability, systemAbilityId : %{public}d", systemAbilityId);
+    std::lock_guard<std::mutex> systemAbilityLock(systemAbilityLock_);
     switch (systemAbilityId) {
         case COMMON_EVENT_SERVICE_ID:
             STANDBYSERVICE_LOGI("common event service is removed!");

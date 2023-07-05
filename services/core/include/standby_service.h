@@ -60,6 +60,7 @@ private:
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
 private:
+    std::mutex systemAbilityLock_ {};
     ServiceRunningState state_ {ServiceRunningState::STATE_NOT_START};
     uint32_t dependsReady_ = 0;
 };

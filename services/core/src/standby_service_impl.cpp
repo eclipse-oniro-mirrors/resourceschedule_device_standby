@@ -53,6 +53,7 @@ const std::string STANDBY_MSG_HANDLER = "StandbyMsgHandler";
 const std::string ON_PLUGIN_REGISTER = "OnPluginRegister";
 const std::string STANDBY_PERMISSION = "ohos.permission.DEVICE_STANDBY_EXEMPT_LIST_UPDATED";
 const std::string SYSTEM_SO_PATH = "/system/lib64/";
+const std::string STANDBY_EXEMPTION_PERMISSION = "ohos.permission.DEVICE_STANDBY_EXEMPTION";
 }
 
 IMPLEMENT_SINGLE_INSTANCE(StandbyServiceImpl);
@@ -90,6 +91,10 @@ void StandbyServiceImpl::InitReadyState()
 {
     STANDBYSERVICE_LOGI("start init necessary plugin");
     handler_->PostTask([this]() {
+        if (isServiceReady_.load()) {
+            STANDBYSERVICE_LOGW("standby service is already ready, do not need repeat");
+            return;
+        }
         if (!standbyStateManager_->Init()) {
             STANDBYSERVICE_LOGE("standby state manager init failed");
             return;
@@ -313,6 +318,10 @@ std::shared_ptr<IStateManagerAdapter>& StandbyServiceImpl::GetStateManager()
 void StandbyServiceImpl::UninitReadyState()
 {
     handler_->PostSyncTask([this]() {
+        if (!isServiceReady_.load()) {
+            STANDBYSERVICE_LOGW("standby service is already not ready, do not need uninit");
+            return;
+        }
         STANDBYSERVICE_LOGE("start uninit necessary observer");
         listenerManager_->UnInit();
         constraintManager_->UnInit();
@@ -444,6 +453,13 @@ ErrCode StandbyServiceImpl::CheckCallerPermission(uint32_t reasonCode)
 ErrCode StandbyServiceImpl::IsSystemAppWithPermission(int32_t uid,
     Security::AccessToken::AccessTokenID tokenId, uint32_t reasonCode)
 {
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, STANDBY_EXEMPTION_PERMISSION)
+        != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        STANDBYSERVICE_LOGE("CheckPermission: ohos.permission.DEVICE_STANDBY_EXEMPTION failed");
+        return ERR_STANDBY_PERMISSION_DENIED;
+    }
+
     uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
     bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
     if (!isSystemApp) {

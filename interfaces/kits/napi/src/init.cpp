@@ -27,9 +27,9 @@ napi_value DeviceStandbyFuncInit(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("isDeviceInStandby", IsDeviceInStandby),
-        DECLARE_NAPI_FUNCTION("getExemptionListApps", GetExemptionListApps),
-        DECLARE_NAPI_FUNCTION("applyExemptionAppResource", ApplyAllowResource),
-        DECLARE_NAPI_FUNCTION("unapplyExemptionAppResource", UnapplyAllowResource),
+        DECLARE_NAPI_FUNCTION("getExemptedApps", GetExemptionListApps),
+        DECLARE_NAPI_FUNCTION("requestExemptionResource", ApplyAllowResource),
+        DECLARE_NAPI_FUNCTION("releaseExemptionResource", UnapplyAllowResource),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 

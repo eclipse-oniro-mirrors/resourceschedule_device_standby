@@ -102,7 +102,6 @@ std::shared_ptr<StateManagerAdapter> StandbyPluginUnitTest::standbyStateManager_
 void StandbyPluginUnitTest::SetUpTestCase()
 {
     StandbyServiceImpl::GetInstance()->Init();
-    StandbyServiceImpl::GetInstance()->InitReadyState();
     SleepForFC();
 
     constraintManager_ = std::make_shared<ConstraintManagerAdapter>();
