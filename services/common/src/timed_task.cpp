@@ -72,14 +72,15 @@ void TimedTask::SetCallbackInfo(const std::function<void()>& callBack)
     this->callBack_ = callBack;
 }
 
-uint64_t TimedTask::CreateTimer(bool repeat, uint64_t interval, bool isExact, const std::function<void()>& callBack)
+uint64_t WEAK_FUNC TimedTask::CreateTimer(bool repeat, uint64_t interval, bool isExact,
+    const std::function<void()>& callBack)
 {
     auto timedTask = std::make_shared<TimedTask>(repeat, interval, isExact);
     timedTask->SetCallbackInfo(callBack);
     return MiscServices::TimeServiceClient::GetInstance()->CreateTimer(timedTask);
 }
 
-bool TimedTask::StartTimer(uint64_t& timeId)
+bool WEAK_FUNC TimedTask::StartTimer(uint64_t& timeId)
 {
     int64_t timeDiff {0};
     if (!TimeProvider::TimeDiffToDayNightSwitch(timeDiff)) {
@@ -94,7 +95,8 @@ bool TimedTask::StartTimer(uint64_t& timeId)
     return true;
 }
 
-bool TimedTask::RegisterTimer(uint64_t& timeId, bool repeat, uint64_t interval, const std::function<void()>& callBack)
+bool WEAK_FUNC TimedTask::RegisterTimer(uint64_t& timeId, bool repeat, uint64_t interval,
+    const std::function<void()>& callBack)
 {
     timeId = CreateTimer(repeat, interval, false, callBack);
     if (timeId == 0) {

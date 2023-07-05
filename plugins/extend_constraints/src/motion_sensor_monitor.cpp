@@ -114,7 +114,6 @@ void MotionSensorMonitor::AddEnergy(AccelData *accelData)
     energy_ += (diff.x *  diff.x) + (diff.y *  diff.y) + (diff.z *  diff.z);
 }
 
-
 bool MotionSensorMonitor::Init()
 {
     int32_t count = -1;

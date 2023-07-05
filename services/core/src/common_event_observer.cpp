@@ -27,7 +27,7 @@ CommonEventObserver::CommonEventObserver(const EventFwk::CommonEventSubscribeInf
     const std::shared_ptr<AppExecFwk::EventHandler>& handler)
     : EventFwk::CommonEventSubscriber(subscribeInfo), handler_(handler) {}
 
-bool CommonEventObserver::Subscribe()
+bool WEAK_FUNC CommonEventObserver::Subscribe()
 {
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(shared_from_this())) {
         STANDBYSERVICE_LOGI("SubscribeCommonEvent occur exception.");
@@ -36,7 +36,7 @@ bool CommonEventObserver::Subscribe()
     return true;
 }
 
-bool CommonEventObserver::Unsubscribe()
+bool WEAK_FUNC CommonEventObserver::Unsubscribe()
 {
     if (!EventFwk::CommonEventManager::UnSubscribeCommonEvent(shared_from_this())) {
         STANDBYSERVICE_LOGI("UnsubscribeCommonEvent occur exception.");

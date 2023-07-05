@@ -15,6 +15,12 @@
 #ifndef FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_INTERFACES_INNERKITS_INCLUDE_APP_MGR_HELPER_H
 #define FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_INTERFACES_INNERKITS_INCLUDE_APP_MGR_HELPER_H
 
+#ifdef STANDBY_SERVICE_UNIT_TEST
+#define WEAK_FUNC __attribute__((weak))
+#else
+#define WEAK_FUNC
+#endif
+
 #include "app_mgr_interface.h"
 #include "app_mgr_proxy.h"
 #include "ipc_skeleton.h"

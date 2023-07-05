@@ -73,7 +73,9 @@
         }
       ],
       "test": [
-        "//foundation/resourceschedule/device_standby/interfaces/innerkits/test/unittest:unittest"
+        "//foundation/resourceschedule/device_standby/interfaces/innerkits/test/unittest:unittest",
+        "//foundation/resourceschedule/device_standby/services/test/unittest:unittest",
+        "//foundation/resourceschedule/device_standby/plugins/test/unittest:unittest"
       ]
     }
   }

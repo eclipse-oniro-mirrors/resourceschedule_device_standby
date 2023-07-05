@@ -33,7 +33,7 @@ CommonEventListener::CommonEventListener(const EventFwk::CommonEventSubscribeInf
     standbyStateManager_ = StandbyServiceImpl::GetInstance()->GetStateManager();
 }
 
-ErrCode CommonEventListener::StartListener()
+ErrCode WEAK_FUNC CommonEventListener::StartListener()
 {
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(shared_from_this())) {
         STANDBYSERVICE_LOGE("SubscribeCommonEvent occur exception");
@@ -42,7 +42,7 @@ ErrCode CommonEventListener::StartListener()
     return ERR_OK;
 }
 
-ErrCode CommonEventListener::StopListener()
+ErrCode WEAK_FUNC CommonEventListener::StopListener()
 {
     if (!EventFwk::CommonEventManager::UnSubscribeCommonEvent(shared_from_this())) {
         STANDBYSERVICE_LOGE("UnsubscribeCommonEvent occur exception");

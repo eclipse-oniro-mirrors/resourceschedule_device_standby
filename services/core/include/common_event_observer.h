@@ -16,6 +16,12 @@
 #ifndef FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_SERVICES_CORE_INCLUDE_DEV_COMMON_EVENT_OBSERVER_H
 #define FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_SERVICES_CORE_INCLUDE_DEV_COMMON_EVENT_OBSERVER_H
 
+#ifdef STANDBY_SERVICE_UNIT_TEST
+#define WEAK_FUNC __attribute__((weak))
+#else
+#define WEAK_FUNC
+#endif
+
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_subscribe_info.h"

@@ -27,7 +27,7 @@ AppMgrHelper::AppMgrHelper() {}
 
 AppMgrHelper::~AppMgrHelper() {}
 
-bool AppMgrHelper::GetAllRunningProcesses(std::vector<AppExecFwk::RunningProcessInfo>& allAppProcessInfos)
+bool WEAK_FUNC AppMgrHelper::GetAllRunningProcesses(std::vector<AppExecFwk::RunningProcessInfo>& allAppProcessInfos)
 {
     std::lock_guard<std::mutex> lock(connectMutex_);
     if (!Connect()) {
@@ -39,7 +39,7 @@ bool AppMgrHelper::GetAllRunningProcesses(std::vector<AppExecFwk::RunningProcess
     return true;
 }
 
-bool AppMgrHelper::Connect()
+bool WEAK_FUNC AppMgrHelper::Connect()
 {
     if (appMgrProxy_ != nullptr) {
         return true;
@@ -65,6 +65,5 @@ bool AppMgrHelper::Connect()
     }
     return true;
 }
-
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

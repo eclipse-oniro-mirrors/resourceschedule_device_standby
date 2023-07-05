@@ -16,6 +16,12 @@
 #ifndef FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_SERVICES_CORE_INCLUDE_BUNDLE_MANAGER_HELPER_H
 #define FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_SERVICES_CORE_INCLUDE_BUNDLE_MANAGER_HELPER_H
 
+#ifdef STANDBY_SERVICE_UNIT_TEST
+#define WEAK_FUNC __attribute__((weak))
+#else
+#define WEAK_FUNC
+#endif
+
 #include "bundle_mgr_interface.h"
 #include "ipc_skeleton.h"
 #include "iremote_object.h"
@@ -32,8 +38,6 @@ public:
 
 private:
     bool Connect();
-    void Disconnect();
-    void OnRemoteDied(const wptr<IRemoteObject> &object);
 
 private:
     sptr<AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;

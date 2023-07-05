@@ -16,6 +16,12 @@
 #ifndef FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_SERVICES_CORE_INCLUDE_ABILITY_MGR_HELPER_H
 #define FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_SERVICES_CORE_INCLUDE_ABILITY_MGR_HELPER_H
 
+#ifdef STANDBY_SERVICE_UNIT_TEST
+#define WEAK_FUNC __attribute__((weak))
+#else
+#define WEAK_FUNC
+#endif
+
 #include "if_system_ability_manager.h"
 #include "system_ability_manager_proxy.h"
 #include "ipc_skeleton.h"

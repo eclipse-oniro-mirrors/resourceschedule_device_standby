@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,7 +35,7 @@ BundleManagerHelper::~BundleManagerHelper()
 {
 }
 
-std::string BundleManagerHelper::GetClientBundleName(int32_t uid)
+std::string WEAK_FUNC BundleManagerHelper::GetClientBundleName(int32_t uid)
 {
     std::string bundle {""};
     std::lock_guard<std::mutex> lock(connectionMutex_);
@@ -47,8 +47,8 @@ std::string BundleManagerHelper::GetClientBundleName(int32_t uid)
     return bundle;
 }
 
-bool BundleManagerHelper::GetApplicationInfo(const std::string &appName, const AppExecFwk::ApplicationFlag flag,
-    const int userId, AppExecFwk::ApplicationInfo &appInfo)
+bool WEAK_FUNC BundleManagerHelper::GetApplicationInfo(const std::string &appName, const
+    AppExecFwk::ApplicationFlag flag, const int userId, AppExecFwk::ApplicationInfo &appInfo)
 {
     STANDBYSERVICE_LOGD("start get application info");
     std::lock_guard<std::mutex> lock(connectionMutex_);
@@ -61,7 +61,7 @@ bool BundleManagerHelper::GetApplicationInfo(const std::string &appName, const A
     return false;
 }
 
-bool BundleManagerHelper::Connect()
+bool WEAK_FUNC BundleManagerHelper::Connect()
 {
     if (bundleMgr_ != nullptr) {
         return true;

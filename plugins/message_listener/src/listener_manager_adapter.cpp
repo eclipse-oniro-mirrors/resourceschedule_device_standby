@@ -59,6 +59,7 @@ bool ListenerManagerAdapter::UnInit()
     for (auto& listener : messageListenerList_) {
         listener->StopListener();
     }
+    messageListenerList_.clear();
     return true;
 }
 

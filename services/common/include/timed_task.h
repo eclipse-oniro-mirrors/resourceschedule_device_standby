@@ -15,6 +15,12 @@
 #ifndef FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_PLUGINS_EXT_INCLUDE_TIME_INFO_H
 #define FOUNDATION_RESOURCESCHEDULE_STANDBY_SERVICE_PLUGINS_EXT_INCLUDE_TIME_INFO_H
 
+#ifdef STANDBY_SERVICE_UNIT_TEST
+#define WEAK_FUNC __attribute__((weak))
+#else
+#define WEAK_FUNC
+#endif
+
 #include <cstdint>
 #include <functional>
 #include <string>

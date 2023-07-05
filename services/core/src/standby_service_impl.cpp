@@ -113,7 +113,7 @@ void StandbyServiceImpl::InitReadyState()
 ErrCode StandbyServiceImpl::RegisterCommEventObserver()
 {
     STANDBYSERVICE_LOGI("register common event observer");
-    std::lock_guard<std::mutex> lock(observerMutex_);
+    std::lock_guard<std::mutex> lock(eventObserverMutex_);
     if (commonEventObserver_) {
         return ERR_STANDBY_OBSERVER_ALREADY_EXIST;
     }
@@ -152,7 +152,7 @@ void StandbyServiceImpl::DayNightSwitchCallback()
 ErrCode StandbyServiceImpl::RegisterTimeObserver()
 {
     STANDBYSERVICE_LOGI("register time observer");
-    std::lock_guard<std::mutex> lock(observerMutex_);
+    std::lock_guard<std::recursive_mutex> lock(timerObserverMutex_);
     if (dayNightSwitchTimerId_ > 0) {
         return ERR_STANDBY_OBSERVER_ALREADY_EXIST;
     }
@@ -169,7 +169,7 @@ ErrCode StandbyServiceImpl::RegisterTimeObserver()
 ErrCode StandbyServiceImpl::UnregisterCommEventObserver()
 {
     STANDBYSERVICE_LOGI("unregister common event observer");
-    std::lock_guard<std::mutex> lock(observerMutex_);
+    std::lock_guard<std::mutex> lock(eventObserverMutex_);
     if (commonEventObserver_) {
         commonEventObserver_->Unsubscribe();
         commonEventObserver_.reset();
@@ -180,7 +180,7 @@ ErrCode StandbyServiceImpl::UnregisterCommEventObserver()
 ErrCode StandbyServiceImpl::UnregisterTimeObserver()
 {
     STANDBYSERVICE_LOGI("unregister time observer");
-    std::lock_guard<std::mutex> lock(observerMutex_);
+    std::lock_guard<std::recursive_mutex> lock(timerObserverMutex_);
     if (!MiscServices::TimeServiceClient::GetInstance()->StopTimer(dayNightSwitchTimerId_)) {
         STANDBYSERVICE_LOGE("day and night switch observer stop failed");
     }
@@ -194,6 +194,7 @@ ErrCode StandbyServiceImpl::UnregisterTimeObserver()
 ErrCode StandbyServiceImpl::ResetTimeObserver()
 {
     STANDBYSERVICE_LOGI("reset time observer");
+    std::lock_guard<std::recursive_mutex> lock(timerObserverMutex_);
     if (UnregisterTimeObserver() != ERR_OK || RegisterTimeObserver() != ERR_OK) {
         STANDBYSERVICE_LOGE("day and night switch observer reset failed");
         return ERR_STANDBY_OBSERVER_RESET_FAILED;
@@ -264,10 +265,12 @@ std::shared_ptr<IStateManagerAdapter>& StandbyServiceImpl::GetStateManager()
 
 void StandbyServiceImpl::UninitReadyState()
 {
-    STANDBYSERVICE_LOGE("start uninit necessary observer");
-    listenerManager_->UnInit();
-    constraintManager_->UnInit();
-    isServiceReady_.store(false);
+    handler_->PostSyncTask([this]() {
+        STANDBYSERVICE_LOGE("start uninit necessary observer");
+        listenerManager_->UnInit();
+        constraintManager_->UnInit();
+        isServiceReady_.store(false);
+        }, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 bool StandbyServiceImpl::ParsePersistentData()
