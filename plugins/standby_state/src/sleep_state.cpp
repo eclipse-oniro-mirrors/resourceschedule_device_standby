@@ -181,8 +181,8 @@ void SleepState::SetPhaseTransitOrRepeatedTask()
 
 void SleepState::ShellDump(const std::vector<std::string>& argsInStr, std::string& result)
 {
-    if (argsInStr[0] == DUMP_SIMULATE_SENSOR) {
-        if (argsInStr[1] == "--repeat") {
+    if (argsInStr[DUMP_FIRST_PARAM] == DUMP_SIMULATE_SENSOR) {
+        if (argsInStr[DUMP_SECOND_PARAM] == "--repeat") {
             StartPeriodlyMotionDetection();
             handler_->PostTask([sleepState = shared_from_this()]() {
                 STANDBYSERVICE_LOGD("after 100ms, stop sensor");

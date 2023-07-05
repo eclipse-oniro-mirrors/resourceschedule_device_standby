@@ -94,6 +94,10 @@ public:
     void DumpSetDebugMode(bool debugMode);
     void DumpSetSwitch(const std::string& switchName, bool switchStatus, std::string& result);
     void DumpSetParameter(const std::string& paramName, int32_t paramValue, std::string& result);
+
+    /**
+     * @brief dump config info
+     */
     void DumpStandbyConfigInfo(std::string& result);
 private:
     template<typename T> std::set<T> GetEligibleAllowConfig(const std::string& paramName,
@@ -112,9 +116,12 @@ private:
     bool ParseResCtrlConfig(const nlohmann::json& resCtrlConfigRoot);
     bool ParseTimerResCtrlConfig(const nlohmann::json& resConfigArray);
     bool ParseDefaultResCtrlConfig(const std::string& resCtrlKey, const nlohmann::json& resConfigArray);
-    template<typename T> bool ParseCommonResCtrlConfig(const nlohmann::json& sigleConfigItem, T& resCtrlConfig);
+    bool ParseCommonResCtrlConfig(const nlohmann::json& sigleConfigItem, DefaultResourceConfig& resCtrlConfig);
+    void ParseTimeLimitedConfig(const nlohmann::json& singleConfigItem, const std::string& key,
+        std::vector<TimeLtdProcess>& resCtrlConfig);
     uint32_t ParseCondition(const std::string& conditionStr);
-
+    template<typename T> void DumpResCtrlConfig(const char* name, const std::vector<T>& configArray,
+        std::stringstream& stream, const std::function<void(const T&)>& func);
 private:
     std::mutex configMutex_;
     std::string pluginName_;

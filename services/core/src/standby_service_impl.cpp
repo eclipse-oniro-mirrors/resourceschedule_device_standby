@@ -786,21 +786,21 @@ void StandbyServiceImpl::ShellDumpInner(const std::vector<std::string>& argsInSt
     std::string& result)
 {
     auto argc = argsInStr.size();
-    if (argc == NO_DUMP_PARAM_NUMS || argsInStr[0] == "-h") {
+    if (argc == NO_DUMP_PARAM_NUMS || argsInStr[DUMP_FIRST_PARAM] == "-h") {
         DumpUsage(result);
-    } else if (argsInStr[0] == DUMP_DETAIL_INFO) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_DETAIL_INFO) {
         DumpShowDetailInfo(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_ENTER_STATE) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_ENTER_STATE) {
         DumpEnterSpecifiedState(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_APPLY_ALLOW_RECORD) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_APPLY_ALLOW_RECORD) {
         DumpModifyAllowList(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_SIMULATE_SENSOR) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_SIMULATE_SENSOR) {
         DumpActivateMotion(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_SUBSCRIBER_OBSERVER) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_SUBSCRIBER_OBSERVER) {
         DumpSubScriberObserver(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_TURN_ON_OFF_SWITCH) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_TURN_ON_OFF_SWITCH) {
         DumpTurnOnOffSwitch(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_CHANGE_STATE_TIMEOUT) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_CHANGE_STATE_TIMEOUT) {
         DumpChangeConfigParam(argsInStr, result);
     } else {
         result += "Error params.\n";
@@ -842,9 +842,9 @@ void StandbyServiceImpl::DumpShowDetailInfo(const std::vector<std::string>& args
     if (argsInStr.size() < DUMP_DETAILED_INFO_MAX_NUMS) {
         return;
     }
-    if (argsInStr[1] == DUMP_DETAIL_CONFIG) {
+    if (argsInStr[DUMP_SECOND_PARAM] == DUMP_DETAIL_CONFIG) {
         DumpStandbyConfigInfo(result);
-    } else if (argsInStr[1] == DUMP_RESET_STATE) {
+    } else if (argsInStr[DUMP_SECOND_PARAM] == DUMP_RESET_STATE) {
         standbyStateManager_->UnInit();
         standbyStateManager_->Init();
         result += "validate debug parameter\n";
@@ -903,29 +903,29 @@ void StandbyServiceImpl::DumpEnterSpecifiedState(const std::vector<std::string>&
 void StandbyServiceImpl::DumpModifyAllowList(const std::vector<std::string>& argsInStr,
     std::string& result)
 {
-    if (argsInStr.size() < DUMP_SLEEP_ALLOW_LIST_NUMS || (argsInStr[1] != "--get" &&
+    if (argsInStr.size() < DUMP_SLEEP_ALLOW_LIST_NUMS || (argsInStr[DUMP_SECOND_PARAM] != "--get" &&
         argsInStr.size() < DUMP_SLEEP_APPLY_ALLOW_LIST_NUMS)) {
         result += "not enough parameter for changing allow list\n";
         return;
     }
-    int32_t uid = std::atoi(argsInStr[2].c_str());
-    std::string name = argsInStr[3];
-    if (argsInStr[1] == "--apply") {
-        uint32_t allowType = std::atoi(argsInStr[4].c_str());
-        int32_t duration = std::atoi(argsInStr[5].c_str());
+    int32_t uid = std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str());
+    std::string name = argsInStr[DUMP_FOURTH_PARAM];
+    if (argsInStr[DUMP_SECOND_PARAM] == "--apply") {
+        uint32_t allowType = std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str());
+        int32_t duration = std::atoi(argsInStr[DUMP_SIXTH_PARAM].c_str());
         sptr<ResourceRequest> resourceRequest = new (std::nothrow) ResourceRequest(allowType,
-            uid, name, duration, "dump", std::atoi(argsInStr[6].c_str()));
+            uid, name, duration, "dump", std::atoi(argsInStr[DUMP_SEVENTH_PARAM].c_str()));
         ApplyAllowResource(resourceRequest);
         result += "add one object to allow list\n";
-    } else if (argsInStr[1] == "--unapply") {
-        uint32_t allowType = std::atoi(argsInStr[4].c_str());
+    } else if (argsInStr[DUMP_SECOND_PARAM] == "--unapply") {
+        uint32_t allowType = std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str());
         sptr<ResourceRequest> resourceRequest = new (std::nothrow) ResourceRequest(allowType,
-            uid, name, 0, "dump", std::atoi(argsInStr[6].c_str()));
+            uid, name, 0, "dump", std::atoi(argsInStr[DUMP_SEVENTH_PARAM].c_str()));
         UnapplyAllowResource(resourceRequest);
         result += "remove one object to allow list\n";
-    } else if (argsInStr[1] == "--get") {
-        uint32_t allowType = std::atoi(argsInStr[2].c_str());
-        bool isApp = (std::atoi(argsInStr[3].c_str()) == 0);
+    } else if (argsInStr[DUMP_SECOND_PARAM] == "--get") {
+        uint32_t allowType = std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str());
+        bool isApp = (std::atoi(argsInStr[DUMP_FOURTH_PARAM].c_str()) == 0);
         std::vector<AllowInfo> allowInfoList;
         GetAllowListInner(allowType, allowInfoList, isApp);
         for (const auto& allowInfo : allowInfoList) {
@@ -943,15 +943,15 @@ void StandbyServiceImpl::DumpTurnOnOffSwitch(const std::vector<std::string>& arg
         return;
     }
     bool switchStatus {false};
-    if (argsInStr[2] == DUMP_ON) {
+    if (argsInStr[DUMP_THIRD_PARAM] == DUMP_ON) {
         switchStatus = true;
-    } else if (argsInStr[2] == DUMP_OFF) {
+    } else if (argsInStr[DUMP_THIRD_PARAM] == DUMP_OFF) {
         switchStatus = false;
     } else {
         result += "not correct parameter for turn on or turn off switch\n";
         return;
     }
-    const std::string& switchName = argsInStr[1];
+    const std::string& switchName = argsInStr[DUMP_SECOND_PARAM];
     if (switchName == DUMP_DEBUG_SWITCH) {
         debugMode_ = switchStatus;
         StandbyConfigManager::GetInstance()->DumpSetDebugMode(debugMode_);
@@ -974,7 +974,8 @@ void StandbyServiceImpl::DumpChangeConfigParam(const std::vector<std::string>& a
         result += "current is not in debug mode, can not change timeout\n";
         return;
     }
-    StandbyConfigManager::GetInstance()->DumpSetParameter(argsInStr[1], std::atoi(argsInStr[2].c_str()), result);
+    StandbyConfigManager::GetInstance()->DumpSetParameter(argsInStr[DUMP_SECOND_PARAM],
+        std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str()), result);
 }
 
 void StandbyServiceImpl::DumpActivateMotion(const std::vector<std::string>& argsInStr,

@@ -96,6 +96,17 @@ public:
      * @return true if succeed
      */
     static bool GetArrayFromJsonValue(const nlohmann::json& jsonValue, const std::string& key, nlohmann::json& value);
+
+    /**
+     * @brief Get the String Array from json value object
+     *
+     * @param jsonValue json object
+     * @param key the name of string array object
+     * @param strArray string array
+     * @return true if succeed
+     */
+    static bool GetStrArrFromJsonValue(const nlohmann::json& jsonValue, const std::string& key,
+        std::vector<std::string>& strArray);
     static bool GetRealPath(const std::string& partialPath, std::string& fullPath);
 private:
     static bool CreateNodeFile(const std::string &filePath);

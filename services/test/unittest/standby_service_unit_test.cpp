@@ -124,9 +124,6 @@ void StandbyServiceUnitTest::TearDownTestCase()
  */
 HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_001, TestSize.Level1)
 {
-    g_softwareSleep = false;
-    StandbyService::GetInstance()->OnStart();
-    g_softwareSleep = true;
     StandbyService::GetInstance()->state_ = ServiceRunningState::STATE_RUNNING;
     StandbyService::GetInstance()->OnStart();
     StandbyServiceImpl::GetInstance()->Init();

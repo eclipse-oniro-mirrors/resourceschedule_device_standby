@@ -79,13 +79,13 @@ ErrCode StandbyConfigManager::Init()
     std::vector<std::string> configFileList = GetConfigFileList(STANDBY_CONFIG_PATH);
     for (const auto& configFile : configFileList) {
         nlohmann::json devStandbyConfigRoot;
+        // if failed to load one json file, read next config file
         if (!JsonUtils::LoadJsonValueFromFile(devStandbyConfigRoot, configFile)) {
             STANDBYSERVICE_LOGE("load config file %{public}s failed", configFile.c_str());
-            return ERR_STANDBY_CONFIG_FILE_LOAD_FAILED;
+            continue;
         }
         if (!ParseDeviceStanbyConfig(devStandbyConfigRoot)) {
             STANDBYSERVICE_LOGE("parse config file %{public}s failed", configFile.c_str());
-            return ERR_STANDBY_CONFIG_FILE_LOAD_FAILED;
         }
     }
 
@@ -94,11 +94,10 @@ ErrCode StandbyConfigManager::Init()
         nlohmann::json resCtrlConfigRoot;
         if (!JsonUtils::LoadJsonValueFromFile(resCtrlConfigRoot, configFile)) {
             STANDBYSERVICE_LOGE("load config file %{public}s failed", configFile.c_str());
-            return ERR_STANDBY_CONFIG_FILE_PARSE_FAILED;
+            continue;
         }
         if (!ParseResCtrlConfig(resCtrlConfigRoot)) {
             STANDBYSERVICE_LOGE("parse config file %{public}s failed", configFile.c_str());
-            return ERR_STANDBY_CONFIG_FILE_PARSE_FAILED;
         }
     }
     return ERR_OK;
@@ -107,7 +106,7 @@ ErrCode StandbyConfigManager::Init()
 std::vector<std::string> StandbyConfigManager::GetConfigFileList(const std::string& relativeConfigPath)
 {
     std::list<std::string> rootDirList;
-    #ifdef STANDBY_CONFIG_POLICY_ENABLE
+#ifdef STANDBY_CONFIG_POLICY_ENABLE
         auto cfgDirList = GetCfgDirList();
         if (cfgDirList != nullptr) {
             for (const auto &cfgDir : cfgDirList->paths) {
@@ -119,7 +118,7 @@ std::vector<std::string> StandbyConfigManager::GetConfigFileList(const std::stri
             }
             FreeCfgDirList(cfgDirList);
         }
-    #endif
+#endif
     if (std::find(rootDirList.begin(), rootDirList.end(), DEFAULT_CONFIG_ROOT_DIR)
         == rootDirList.end()) {
         rootDirList.emplace_front(DEFAULT_CONFIG_ROOT_DIR);
@@ -313,34 +312,36 @@ bool StandbyConfigManager::ParseDeviceStanbyConfig(const nlohmann::json& devStan
 
 bool StandbyConfigManager::ParseStandbyConfig(const nlohmann::json& standbyConfig)
 {
-    std::lock_guard<std::mutex> lock(configMutex_);
+    bool ret = true;
     for (const auto& element : standbyConfig.items()) {
         if (!element.value().is_primitive()) {
-            STANDBYSERVICE_LOGE("there is unexpected type of key in standby config %{public}s", element.key().c_str());
-            return false;
+            STANDBYSERVICE_LOGW("there is unexpected type of key in standby config %{public}s", element.key().c_str());
+            ret = false;
+            continue;
         }
         if (element.value().is_boolean()) {
-            standbySwitchMap_.erase(element.key());
-            standbySwitchMap_.emplace(element.key(), element.value().get<bool>());
+            standbySwitchMap_[element.key()] = element.value().get<bool>();
         } else if (element.value().is_number_integer()) {
-            standbyParaMap_.erase(element.key());
-            if (element.value().get<int32_t>() <= 0) {
-                STANDBYSERVICE_LOGE("there is negative or zero value in standby config");
-                return false;
+            if (element.value().get<int32_t>() < 0) {
+                STANDBYSERVICE_LOGW("there is negative value in standby config %{public}s", element.key().c_str());
+                ret = false;
+                continue;
             }
-            standbyParaMap_.emplace(element.key(), element.value().get<int32_t>());
+            standbyParaMap_[element.key()] = element.value().get<int32_t>();
         }
     }
-    return true;
+    return ret;
 }
 
 bool StandbyConfigManager::ParseIntervalList(const nlohmann::json& standbyIntervalList)
 {
+    bool ret = true;
     for (const auto& element : standbyIntervalList.items()) {
         if (!element.value().is_array()) {
-            STANDBYSERVICE_LOGE("there is unexpected value of %{public}s in standby interval list",
+            STANDBYSERVICE_LOGW("there is unexpected value of %{public}s in standby interval list",
                 element.key().c_str());
-            return false;
+            ret = false;
+            continue;
         }
         std::vector<int32_t> intervalList;
         for (const int32_t interval : element.value()) {
@@ -348,26 +349,28 @@ bool StandbyConfigManager::ParseIntervalList(const nlohmann::json& standbyInterv
         }
         intervalListMap_.emplace(element.key(), std::move(intervalList));
     }
-    return true;
+    return ret;
 }
 
 bool StandbyConfigManager::ParseStandbySwitchConfig(const nlohmann::json& standbySwitchConfig)
 {
+    bool ret = true;
     for (const auto& element : standbySwitchConfig.items()) {
         if (!element.value()) {
-            STANDBYSERVICE_LOGE("there is unexpected type of value in standby switch config");
-            return false;
+            STANDBYSERVICE_LOGW("there is unexpected type of value in standby switch config %{public}s",
+                element.key().c_str());
+            ret = false;
+            continue;
         }
-        strategySwitchMap_.erase(element.key());
-        strategySwitchMap_.emplace(element.key(), element.value().get<bool>());
+        strategySwitchMap_[element.key()] = element.value().get<bool>();
     }
-    return true;
+    return ret;
 }
 
 bool StandbyConfigManager::ParseStrategyListConfig(const nlohmann::json& standbyListConfig)
 {
     if (!standbyListConfig.is_array()) {
-        STANDBYSERVICE_LOGE("there is error in strategy list config");
+        STANDBYSERVICE_LOGW("there is error in strategy list config");
         return false;
     }
     strategyList_.clear();
@@ -379,41 +382,49 @@ bool StandbyConfigManager::ParseStrategyListConfig(const nlohmann::json& standby
 
 bool StandbyConfigManager::ParseHalfHourSwitchConfig(const nlohmann::json& halfHourSwitchConfig)
 {
+    bool ret = true;
     for (const auto& element : halfHourSwitchConfig.items()) {
         if (!element.value().is_boolean()) {
-            STANDBYSERVICE_LOGE("there is unexpected type of value in half hour standby switch config");
-            return false;
+            STANDBYSERVICE_LOGW("there is unexpected type of value in half hour standby switch config %{public}s",
+                element.key().c_str());
+            ret = false;
+            return ret;
         }
-        halfhourSwitchMap_.erase(element.key());
-        halfhourSwitchMap_.emplace(element.key(), element.value().get<bool>());
+        halfhourSwitchMap_[element.key()] = element.value().get<bool>();
     }
-    return true;
+    return ret;
 }
 
 bool StandbyConfigManager::ParseResCtrlConfig(const nlohmann::json& resCtrlConfigRoot)
 {
+    bool ret = true;
     for (const auto& element : resCtrlConfigRoot.items()) {
         if (!element.value().is_array()) {
-            STANDBYSERVICE_LOGE("there is unexpected type of value in resource control config");
-            return false;
+            STANDBYSERVICE_LOGW("there is unexpected type of value in resource control config %{public}s",
+                element.key().c_str());
+            ret = false;
+            continue;
         }
         std::string resCtrlKey = element.key();
         if (!ParseDefaultResCtrlConfig(resCtrlKey, element.value())) {
-            STANDBYSERVICE_LOGE("there is error in config of %{public}s", resCtrlKey.c_str());
-            return false;
+            STANDBYSERVICE_LOGW("there is error in config of %{public}s", resCtrlKey.c_str());
+            ret = false;
+            continue;
         }
+        // parse exemption config of timer resource
         if (resCtrlKey == TAG_TIMER && !ParseTimerResCtrlConfig(element.value())) {
-            STANDBYSERVICE_LOGE("there is error in config of %{public}s", resCtrlKey.c_str());
-            return false;
+            STANDBYSERVICE_LOGW("there is error in config of %{public}s", resCtrlKey.c_str());
+            ret = false;
+            continue;
         }
     }
-    return true;
+    return ret;
 }
 
 bool StandbyConfigManager::ParseTimerResCtrlConfig(const nlohmann::json& resConfigArray)
 {
     if (!resConfigArray.is_array()) {
-        STANDBYSERVICE_LOGE("the value of timer config should be an array");
+        STANDBYSERVICE_LOGW("the value of timer config should be an array");
         return false;
     }
     timerResConfigList_.clear();
@@ -429,7 +440,7 @@ bool StandbyConfigManager::ParseTimerResCtrlConfig(const nlohmann::json& resConf
             if (!JsonUtils::GetStringFromJsonValue(singleLtdAppItem, TAG_NAME, timerClockApp.name_) ||
                 (!JsonUtils::GetBoolFromJsonValue(singleLtdAppItem, TAG_TIMER_CLOCK, timerClockApp.isTimerClock_) &&
                 !JsonUtils::GetInt32FromJsonValue(singleLtdAppItem, TAG_TIMER_PERIOD, timerClockApp.timerPeriod_))) {
-                STANDBYSERVICE_LOGE("there is error in timer clock config");
+                STANDBYSERVICE_LOGW("there is error in timer clock config");
                 return false;
             }
             timerResourceConfig.timerClockApps_.emplace_back(std::move(timerClockApp));
@@ -444,88 +455,72 @@ bool StandbyConfigManager::ParseDefaultResCtrlConfig(const std::string& resCtrlK
     const nlohmann::json& resConfigArray)
 {
     if (!resConfigArray.is_array()) {
-        STANDBYSERVICE_LOGE("the value of %{public}s should be an array", resCtrlKey.c_str());
+        STANDBYSERVICE_LOGW("the value of %{public}s should be an array", resCtrlKey.c_str());
         return false;
     }
-    defaultResourceConfigMap_.erase(resCtrlKey);
     auto defaultResConfigPtr = std::make_shared<std::vector<DefaultResourceConfig>>();
     for (const auto &singleConfigItem : resConfigArray) {
         DefaultResourceConfig defaultResourceConfig;
         if (!ParseCommonResCtrlConfig(singleConfigItem, defaultResourceConfig)) {
-            STANDBYSERVICE_LOGE("the value of %{public}s can not be parsed", resCtrlKey.c_str());
+            STANDBYSERVICE_LOGW("the value of %{public}s can not be parsed", resCtrlKey.c_str());
             return false;
-        }
-        if (!singleConfigItem.contains(TAG_APPS_LIMIT)) {
-            defaultResConfigPtr->emplace_back(std::move(defaultResourceConfig));
-            continue;
-        }
-        const nlohmann::json& limitedAppItems = singleConfigItem.at(TAG_APPS_LIMIT);
-        for (const auto &singleLtdAppItem : limitedAppItems) {
-            TimeLtdProcess timeLtdApps;
-            if (!JsonUtils::GetStringFromJsonValue(singleLtdAppItem, TAG_NAME, timeLtdApps.name_) ||
-                !JsonUtils::GetInt32FromJsonValue(singleLtdAppItem, TAG_MAX_DURATION_LIM,
-                timeLtdApps.maxDurationLim_)) {
-                STANDBYSERVICE_LOGE("there is error in %{public}s config", resCtrlKey.c_str());
-                return false;
-            }
-            defaultResourceConfig.timeLtdApps_.emplace_back(std::move(timeLtdApps));
         }
         defaultResConfigPtr->emplace_back(std::move(defaultResourceConfig));
     }
-    defaultResourceConfigMap_.emplace(resCtrlKey, defaultResConfigPtr);
+    defaultResourceConfigMap_[resCtrlKey] = defaultResConfigPtr;
     STANDBYSERVICE_LOGI("succeed to parse the config of %{public}s", resCtrlKey.c_str());
     return true;
 }
 
-template<typename T>
-bool StandbyConfigManager::ParseCommonResCtrlConfig(const nlohmann::json& singleConfigItem, T& resCtrlConfig)
+bool StandbyConfigManager::ParseCommonResCtrlConfig(const nlohmann::json& singleConfigItem,
+    DefaultResourceConfig& resCtrlConfig)
 {
     if (!singleConfigItem.contains(TAG_ACTION) || !singleConfigItem.contains(TAG_CONDITION)) {
-        STANDBYSERVICE_LOGE("there is no necessary field %{public}s or %{public}s",
+        STANDBYSERVICE_LOGW("there is no necessary field %{public}s or %{public}s",
             TAG_ACTION.c_str(), TAG_CONDITION.c_str());
         return false;
     }
-    resCtrlConfig.isAllow_ = false;
     std::string resCtrlAction;
-    if (!JsonUtils::GetStringFromJsonValue(singleConfigItem, TAG_ACTION, resCtrlAction)) {
-        STANDBYSERVICE_LOGE("get action config failed");
-    } else if (resCtrlAction == TAG_ALLOW) {
-        resCtrlConfig.isAllow_ = true;
+    std::vector<std::string> conditionItemArray {};
+    if (!JsonUtils::GetStringFromJsonValue(singleConfigItem, TAG_ACTION, resCtrlAction) ||
+        !JsonUtils::GetStrArrFromJsonValue(singleConfigItem, TAG_CONDITION, conditionItemArray)) {
+        STANDBYSERVICE_LOGW("get necessary field %{public}s or %{public}s config failed",
+            TAG_ACTION.c_str(), TAG_CONDITION.c_str());
+        return false;
     }
-    const nlohmann::json& conditionItems = singleConfigItem.at(TAG_CONDITION);
-    for (const auto &singleConditionItem : conditionItems) {
-        uint32_t conditionValue = ParseCondition(singleConditionItem.get<std::string>());
+    resCtrlConfig.isAllow_ = resCtrlAction == TAG_ALLOW;
+
+    for (const auto &singleConditionItem : conditionItemArray) {
+        uint32_t conditionValue = ParseCondition(singleConditionItem);
         if (conditionValue > 0) {
             resCtrlConfig.conditions_.emplace_back(conditionValue);
         }
     }
-    if (singleConfigItem.contains(TAG_PROCESSES)) {
-        const nlohmann::json& precessItems = singleConfigItem.at(TAG_PROCESSES);
-        for (const auto &singleProcessItem : precessItems) {
-            resCtrlConfig.processes_.emplace_back(singleProcessItem.get<std::string>());
-        }
-    }
-    if (singleConfigItem.contains(TAG_APPS)) {
-        const nlohmann::json& appItems = singleConfigItem.at(TAG_APPS);
-        for (const auto &singleAppItem : appItems) {
-            resCtrlConfig.apps_.emplace_back(singleAppItem.get<std::string>());
-        }
-    }
 
-    if (singleConfigItem.contains(TAG_PROCESSES_LIMIT)) {
-        const nlohmann::json& limitedProcessItems = singleConfigItem.at(TAG_PROCESSES_LIMIT);
-        for (const auto &singleLtdProcessItem : limitedProcessItems) {
-            std::string name {};
-            int32_t duration {0};
-            if (!JsonUtils::GetStringFromJsonValue(singleLtdProcessItem, TAG_NAME, name) ||
-                !JsonUtils::GetInt32FromJsonValue(singleLtdProcessItem, TAG_MAX_DURATION_LIM, duration)) {
-                STANDBYSERVICE_LOGE("there is error in duration config");
-                continue;
-            }
-            resCtrlConfig.timeLtdProcesses_.emplace_back(TimeLtdProcess{name, duration});
-        }
-    }
+    JsonUtils::GetStrArrFromJsonValue(singleConfigItem, TAG_PROCESSES, resCtrlConfig.processes_);
+    JsonUtils::GetStrArrFromJsonValue(singleConfigItem, TAG_APPS, resCtrlConfig.apps_);
+    ParseTimeLimitedConfig(singleConfigItem, TAG_PROCESSES_LIMIT, resCtrlConfig.timeLtdProcesses_);
+    ParseTimeLimitedConfig(singleConfigItem, TAG_APPS_LIMIT, resCtrlConfig.timeLtdApps_);
     return true;
+}
+
+void StandbyConfigManager::ParseTimeLimitedConfig(const nlohmann::json& singleConfigItem,
+    const std::string& key, std::vector<TimeLtdProcess>& timeLimitedConfig)
+{
+    nlohmann::json timeLimitedItems;
+    if (!JsonUtils::GetArrayFromJsonValue(singleConfigItem, key, timeLimitedItems)) {
+        return;
+    }
+    for (const auto &singleLtdItem : timeLimitedItems) {
+        std::string name {};
+        int32_t duration {0};
+        if (!JsonUtils::GetStringFromJsonValue(singleLtdItem, TAG_NAME, name) ||
+            !JsonUtils::GetInt32FromJsonValue(singleLtdItem, TAG_MAX_DURATION_LIM, duration)) {
+            STANDBYSERVICE_LOGW("there is error in %{public}s config", key.c_str());
+            continue;
+        }
+        timeLimitedConfig.emplace_back(TimeLtdProcess{name, duration});
+    }
 }
 
 uint32_t StandbyConfigManager::ParseCondition(const std::string& conditionStr)
@@ -583,15 +578,51 @@ void StandbyConfigManager::DumpStandbyConfigInfo(std::string& result)
 {
     std::lock_guard<std::mutex> lock(configMutex_);
     std::stringstream stream;
-    for (const auto& [key, val] : standbySwitchMap_) {
-        stream << key << ": " << (val ? "true" : "false") << "\n";
+    for (const auto& [switchName, switchVal] : standbySwitchMap_) {
+        stream << switchName << ": " << (switchVal ? "true" : "false") << "\n";
     }
-    for (const auto& [key, val] : standbyParaMap_) {
-        stream << key << ": " << val << "\n";
+    for (const auto& [paraName, paraVal] : standbyParaMap_) {
+        stream << paraName << ": " << paraVal << "\n";
+    }
+    for (const auto& [strategyName, strategyVal] : strategySwitchMap_) {
+        stream << strategyName << ": " << (strategyVal ? "true" : "false") << "\n";
+    }
+    stream << "strategy:";
+    for (const auto& strategy : strategyList_) {
+        stream << " " << strategy;
+    }
+    stream << "\n";
+    auto printConditions = [&stream](const int32_t& condition) { stream << "\t\t" << condition << " "; };
+    auto printProceses = [&stream](const std::string& process) { stream << "\t\t" << process << "\n"; };
+    auto printLtdProceses = [&stream](const TimeLtdProcess& timeLtdProcess) {
+        stream << "\t\t" << timeLtdProcess.name_ << " " << timeLtdProcess.maxDurationLim_ << "\n";
+        };
+    for (const auto& [resCtrlKey, resConfigVec] : defaultResourceConfigMap_) {
+        for (const auto& resConfig : *resConfigVec) {
+            stream << resCtrlKey << ": \n";
+            stream << "\tisAllow: " << resConfig.isAllow_ << "\n";
+            DumpResCtrlConfig<uint32_t>("conditions", resConfig.conditions_, stream, printConditions);
+            stream << "\n";
+            DumpResCtrlConfig<std::string>("processes", resConfig.processes_, stream, printProceses);
+            DumpResCtrlConfig<std::string>("apps", resConfig.apps_, stream, printProceses);
+            DumpResCtrlConfig<TimeLtdProcess>("timeLtdProcesses", resConfig.timeLtdProcesses_,
+                stream, printLtdProceses);
+            DumpResCtrlConfig<TimeLtdProcess>("timeLtdApps", resConfig.timeLtdApps_, stream, printLtdProceses);
+        }
     }
     result += stream.str();
     stream.str("");
     stream.clear();
+}
+
+template<typename T> void StandbyConfigManager::DumpResCtrlConfig(const char* name, const std::vector<T>& configArray,
+    std::stringstream& stream, const std::function<void(const T&)>& func)
+{
+    if (configArray.empty()) {
+        return;
+    }
+    stream << "\t" << name << ":\n";
+    for_each(configArray.begin(), configArray.end(), func);
 }
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

@@ -39,6 +39,7 @@ const uint32_t POWER_SERVICE_READY = 16;
 const uint32_t ALL_DEPENDS_READY = 31;
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(
     StandbyService::GetInstance().get());
+const bool SOFTWARE_SLEEP = system::GetBoolParameter("persist.sys.standby_switch", true);
 }
 
 IMPLEMENT_SINGLE_INSTANCE(StandbyService);
@@ -52,7 +53,7 @@ StandbyService::~StandbyService() {}
 
 void StandbyService::OnStart()
 {
-    if (!g_softwareSleep) {
+    if (!SOFTWARE_SLEEP) {
         return;
     }
     if (state_ == ServiceRunningState::STATE_RUNNING) {

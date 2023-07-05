@@ -148,6 +148,23 @@ bool JsonUtils::GetArrayFromJsonValue(const nlohmann::json& jsonValue, const std
     return true;
 }
 
+bool JsonUtils::GetStrArrFromJsonValue(const nlohmann::json& jsonValue, const std::string& key,
+    std::vector<std::string>& strArray)
+{
+    nlohmann::json strArrayValue;
+    if (!JsonUtils::GetArrayFromJsonValue(jsonValue, key, strArrayValue)) {
+        return false;
+    }
+    strArray.clear();
+    for (const auto &strItem : strArrayValue) {
+        if (!strItem.is_string()) {
+            return false;
+        }
+        strArray.emplace_back(strItem.get<std::string>());
+    }
+    return true;
+}
+
 bool JsonUtils::GetFileContent(const std::string& filePath, std::string& content)
 {
     std::string fullPath;

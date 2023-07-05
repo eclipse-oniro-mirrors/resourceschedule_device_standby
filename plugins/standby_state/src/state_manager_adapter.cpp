@@ -296,11 +296,11 @@ void StateManagerAdapter::SendNotification(uint32_t preState, bool needDispatchE
 
 void StateManagerAdapter::ShellDump(const std::vector<std::string>& argsInStr, std::string& result)
 {
-    if (argsInStr[0] == DUMP_DETAIL_INFO) {
+    if (argsInStr[DUMP_FIRST_PARAM] == DUMP_DETAIL_INFO) {
         DumpShowDetailInfo(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_ENTER_STATE) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_ENTER_STATE) {
         DumpEnterSpecifiedState(argsInStr, result);
-    } else if (argsInStr[0] == DUMP_SIMULATE_SENSOR) {
+    } else if (argsInStr[DUMP_FIRST_PARAM] == DUMP_SIMULATE_SENSOR) {
         DumpActivateMotion(argsInStr, result);
     }
     curStatePtr_->ShellDump(argsInStr, result);
@@ -318,25 +318,25 @@ void StateManagerAdapter::DumpShowDetailInfo(const std::vector<std::string>& arg
 void StateManagerAdapter::DumpEnterSpecifiedState(const std::vector<std::string>& argsInStr, std::string& result)
 {
     isBlocked_ = false;
-    if (argsInStr[2] == "false") {
+    if (argsInStr[DUMP_THIRD_PARAM] == "false") {
         curStatePtr_->StartTransitNextState(curStatePtr_);
     } else {
-        TransitToStateInner(static_cast<uint32_t>(std::atoi(argsInStr[1].c_str())));
+        TransitToStateInner(static_cast<uint32_t>(std::atoi(argsInStr[DUMP_SECOND_PARAM].c_str())));
     }
 }
 
 void StateManagerAdapter::DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result)
 {
-    if (argsInStr[1] == "--motion") {
+    if (argsInStr[DUMP_SECOND_PARAM] == "--motion") {
         curStatePtr_->StartTransitNextState(curStatePtr_);
         handler_->PostTask([this]() {
             STANDBYSERVICE_LOGD("after 3000ms, stop sensor");
             this->EndEvalCurrentState(false);
             }, MOTION_DETECTION_TIMEOUT);
         result += "finished start periodly sensor\n";
-    } else if (argsInStr[1] == "--blocked") {
+    } else if (argsInStr[DUMP_SECOND_PARAM] == "--blocked") {
         BlockCurrentState();
-    } else if (argsInStr[1] == "--halfhour") {
+    } else if (argsInStr[DUMP_SECOND_PARAM] == "--halfhour") {
         OnScreenOffHalfHourInner(true, true);
     }
 }

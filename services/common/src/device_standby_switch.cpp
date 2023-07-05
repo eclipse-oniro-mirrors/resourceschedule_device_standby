@@ -21,8 +21,6 @@ namespace OHOS {
 namespace DevStandbyMgr {
 const std::string KEY_BUILD_CHARACTER = "ro.build.characteristics";
 
-bool g_softwareSleep = system::GetBoolParameter("persist.sys.standby_switch", true);
-
 DeviceType GetDeviceType()
 {
     std::string deviceType = system::GetParameter(KEY_BUILD_CHARACTER, "unknown");

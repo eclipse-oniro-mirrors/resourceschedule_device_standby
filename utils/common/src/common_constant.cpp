@@ -85,5 +85,13 @@ const std::string DUMP_SIMULATE_SENSOR = "-S";
 const std::string DUMP_SUBSCRIBER_OBSERVER = "-O";
 const std::string DUMP_TURN_ON_OFF_SWITCH  = "-T";
 const std::string DUMP_CHANGE_STATE_TIMEOUT  = "-C";
+
+const int32_t DUMP_FIRST_PARAM = 0;
+const int32_t DUMP_SECOND_PARAM = 1;
+const int32_t DUMP_THIRD_PARAM = 2;
+const int32_t DUMP_FOURTH_PARAM = 3;
+const int32_t DUMP_FIFTH_PARAM = 4;
+const int32_t DUMP_SIXTH_PARAM = 5;
+const int32_t DUMP_SEVENTH_PARAM = 6;
 }  // namespace DevStandbyMgr
 }  // namespace OHOS
