@@ -101,6 +101,7 @@ ErrCode SleepState::BeginState()
     maintIntervalIndex_ = 0;
     curPhase_ = SleepStatePhase::SYS_RES_DEEP;
     maintIntervalTimeOut = CalculateMaintTimeOut(stateManagerPtr, true);
+    STANDBYSERVICE_LOGD("maintIntervalTimeOut is %{public}ld ms", maintIntervalTimeOut);
     handler_->PostTask([sleepState = shared_from_this()]() {
         BaseState::AcquireStandbyRunningLock();
         sleepState->TransitToPhase(sleepState->curPhase_, sleepState->curPhase_ + 1);

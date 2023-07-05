@@ -98,6 +98,11 @@ extern const int32_t DUMP_FOURTH_PARAM;
 extern const int32_t DUMP_FIFTH_PARAM;
 extern const int32_t DUMP_SIXTH_PARAM;
 extern const int32_t DUMP_SEVENTH_PARAM;
+
+extern const int32_t NIGHT_ENTRANCE_HOUR;
+extern const int32_t NIGHT_ENTRANCE_MIN;
+extern const int32_t DAY_ENTRANCE_HOUR;
+extern const int32_t DAY_ENTRANCE_MIN;
 }  // namespace DevStandbyMgr
 }  // namespace OHOS
 

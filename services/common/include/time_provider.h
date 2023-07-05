@@ -49,11 +49,10 @@ enum TimeConstant : int64_t {
 class TimeProvider {
 public:
     static bool ConvertTimeStampToLocalTime(int64_t curTimeStamp, struct tm& curLocalTime);
-    static uint32_t GetCondition();
+    static uint32_t GetCondition(int64_t afterNextSeconds = 0);
     static int64_t GetNapTimeOut();
     static bool TimeDiffToDayNightSwitch(int64_t& timeDiff);
     static int32_t GetRandomDelay(int32_t low, int32_t high);
-private:
     static bool DiffToFixedClock(int64_t curTimeStamp, int32_t tmHour, int32_t tmMin, int64_t& timeDiff);
 };
 }  // namespace DevStandbyMgr

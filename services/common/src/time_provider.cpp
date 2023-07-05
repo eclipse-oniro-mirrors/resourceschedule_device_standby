@@ -47,10 +47,11 @@ bool TimeProvider::ConvertTimeStampToLocalTime(int64_t curTimeStamp, struct tm& 
     return true;
 }
 
-uint32_t TimeProvider::GetCondition()
+uint32_t TimeProvider::GetCondition(int64_t afterNextSeconds)
 {
     int64_t curSecTimeStamp = MiscServices::TimeServiceClient::GetInstance()->GetWallTimeMs() / MSEC_PER_SEC;
     struct tm curLocalTime {};
+    curSecTimeStamp += afterNextSeconds;
     if (!ConvertTimeStampToLocalTime(curSecTimeStamp, curLocalTime)) {
         STANDBYSERVICE_LOGE("convert time stamp to local time failed");
         return ConditionType::DAY_STANDBY;

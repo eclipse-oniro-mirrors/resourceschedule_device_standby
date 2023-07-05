@@ -25,6 +25,7 @@
 #include "timed_task.h"
 #include "time_provider.h"
 #include "standby_service_impl.h"
+#include "standby_config_manager.h"
 
 using namespace OHOS::MiscServices;
 namespace OHOS {
@@ -202,11 +203,20 @@ int64_t StateWithMaint::CalculateMaintTimeOut(const std::shared_ptr<IStateManage
         return 0;
     }
     if (isFirstInterval) {
-        maintIntervalTimeOut = TimeConstant::MSEC_PER_SEC * maintInterval_[maintIntervalIndex_];
+        maintIntervalTimeOut = maintInterval_[maintIntervalIndex_];
     } else {
         maintIntervalIndex_ = std::min(maintIntervalIndex_ + 1, static_cast<int32_t>(maintInterval_.size() - 1));
-        maintIntervalTimeOut = TimeConstant::MSEC_PER_SEC * maintInterval_[maintIntervalIndex_];
+        maintIntervalTimeOut =  maintInterval_[maintIntervalIndex_];
     }
+    int64_t timeDiff {0};
+    if (TimeProvider::GetCondition(maintIntervalTimeOut) == ConditionType::NIGHT_STANDBY) {
+        int64_t curSecTimeStamp = MiscServices::TimeServiceClient::GetInstance()->GetWallTimeMs() / MSEC_PER_SEC;
+        TimeProvider::DiffToFixedClock(curSecTimeStamp, DAY_ENTRANCE_HOUR, DAY_ENTRANCE_MIN, timeDiff);
+        maintIntervalTimeOut *= TimeConstant::MSEC_PER_SEC;
+        maintIntervalTimeOut += timeDiff;
+        return maintIntervalTimeOut;
+    }
+    maintIntervalTimeOut *= TimeConstant::MSEC_PER_SEC;
     return maintIntervalTimeOut;
 }
 }  // namespace DevStandbyMgr

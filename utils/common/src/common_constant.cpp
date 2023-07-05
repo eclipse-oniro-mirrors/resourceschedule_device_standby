@@ -97,5 +97,10 @@ const int32_t DUMP_FOURTH_PARAM = 3;
 const int32_t DUMP_FIFTH_PARAM = 4;
 const int32_t DUMP_SIXTH_PARAM = 5;
 const int32_t DUMP_SEVENTH_PARAM = 6;
+
+const int32_t NIGHT_ENTRANCE_HOUR = 23;
+const int32_t NIGHT_ENTRANCE_MIN = 45;
+const int32_t DAY_ENTRANCE_HOUR = 6;
+const int32_t DAY_ENTRANCE_MIN = 0;
 }  // namespace DevStandbyMgr
 }  // namespace OHOS
