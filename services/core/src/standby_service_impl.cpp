@@ -162,6 +162,13 @@ void StandbyServiceImpl::DayNightSwitchCallback()
 {
     handler_->PostTask([standbyImpl = shared_from_this()]() {
         STANDBYSERVICE_LOGD("start day and night switch");
+        if (!standbyImpl->isServiceReady_.load()) {
+            STANDBYSERVICE_LOGW("standby service is not ready");
+            if (!TimedTask::StartDayNightSwitchTimer(standbyImpl->dayNightSwitchTimerId_)) {
+                standbyImpl->ResetTimeObserver();
+            }
+            return;
+        }
         auto curState = standbyImpl->standbyStateManager_->GetCurState();
         if (curState == StandbyState::SLEEP) {
             StandbyMessage standbyMessage{StandbyMessageType::RES_CTRL_CONDITION_CHANGED};
