@@ -42,12 +42,12 @@ extern const std::vector<std::string> STATE_NAME_LIST;
 extern const std::string MOTION_THREADSHOLD;
 
 extern const std::string MOTION_DECTION_TASK;
-extern const int32_t MOTION_DECTION_TIME_OUT;
-extern const int32_t REST_TIME_OUT;
-extern const int32_t TOTAL_TIME_OUT;
-extern const int32_t PERIODLY_TASK_DECTION_TIME_OUT;
-extern const int32_t PERIODLY_TASK_REST_TIME_OUT;
-extern const int32_t PERIODLY_TASK_TOTAL_TIME_OUT;
+extern const int32_t MOTION_DETECTION_TIMEOUT;
+extern const int32_t REST_TIMEOUT;
+extern const int32_t TOTAL_TIMEOUT;
+extern const int32_t PERIODLY_TASK_DECTION_TIMEOUT;
+extern const int32_t PERIODLY_TASK_REST_TIMEOUT;
+extern const int32_t PERIODLY_TASK_TOTAL_TIMEOUT;
 extern const int64_t SENSOR_SAMPLING_RATE;
 extern const int64_t SENSOR_REPORTING_RATE;
 

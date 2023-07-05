@@ -38,8 +38,7 @@ std::shared_ptr<PowerMgr::RunningLock> BaseState::phaseRunningLock_ = nullptr;
 
 ErrCode BaseState::Init()
 {
-    auto callbackTask = [this]()
-        { this->TryToTransitNextState(); };
+    auto callbackTask = [this]() { this->TryToTransitNextState(); };
     enterStandbyTimerId_ = TimedTask::CreateTimer(true, RETRY_INTERVAL, true, callbackTask);
     if (enterStandbyTimerId_ == 0) {
         STANDBYSERVICE_LOGE("%{public}s state init failed", STATE_NAME_LIST[GetCurState()].c_str());
@@ -69,7 +68,7 @@ uint32_t BaseState::GetCurInnerPhase()
 void BaseState::TryToTransitNextState()
 {
     BaseState::GetStateRunningLock()->Lock();
-    handler_->PostTask([this](){
+    handler_->PostTask([this]() {
         STANDBYSERVICE_LOGD("due to timeout, try to enter %{public}s state from %{public}s",
             STATE_NAME_LIST[nextState_].c_str(), STATE_NAME_LIST[curState_].c_str());
         auto stateManagerPtr = stateManager_.lock();
@@ -92,7 +91,7 @@ void BaseState::TryToTransitNextState()
             }
             StopTimedTask(TRANSIT_NEXT_STATE_TIMED_TASK);
         }
-    }, TRANSIT_NEXT_STATE_TIMED_TASK);
+        }, TRANSIT_NEXT_STATE_TIMED_TASK);
 }
 
 void BaseState::TransitToPhase(uint32_t curPhase, uint32_t nextPhase)

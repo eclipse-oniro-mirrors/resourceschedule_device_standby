@@ -57,7 +57,8 @@ ErrCode StandbyServiceSubscriberStub::OnRemoteRequestInner(uint32_t code,
 void StandbyServiceSubscriberStub::OnDeviceIdleMode(bool napped, bool sleeping)
 {}
 
-void StandbyServiceSubscriberStub::OnAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType, bool added)
+void StandbyServiceSubscriberStub::OnAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType,
+    bool added)
 {}
 
 ErrCode StandbyServiceSubscriberStub::HandleOnDeviceIdleMode(MessageParcel& data)

@@ -45,8 +45,8 @@ IMPLEMENT_SINGLE_INSTANCE(StandbyService);
 
 StandbyService::StandbyService() : SystemAbility(DEVICE_STANDBY_SERVICE_SYSTEM_ABILITY_ID, true) {}
 
-StandbyService::StandbyService(const int32_t systemAbilityId, bool runOnCreate) :
-    SystemAbility(DEVICE_STANDBY_SERVICE_SYSTEM_ABILITY_ID, true) {}
+StandbyService::StandbyService(const int32_t systemAbilityId, bool runOnCreate)
+    : SystemAbility(DEVICE_STANDBY_SERVICE_SYSTEM_ABILITY_ID, true) {}
 
 StandbyService::~StandbyService() {}
 
@@ -130,7 +130,7 @@ void StandbyService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::s
             STANDBYSERVICE_LOGI("ability mgr service is removed!");
             dependsReady_ &= (~ABILITY_SERVICE_READY);
             break;
-         case BUNDLE_MGR_SERVICE_SYS_ABILITY_ID:
+        case BUNDLE_MGR_SERVICE_SYS_ABILITY_ID:
             STANDBYSERVICE_LOGI("bundle mgr service is removed!");
             dependsReady_ &= (~BUNDLE_MGR_READY);
             break;

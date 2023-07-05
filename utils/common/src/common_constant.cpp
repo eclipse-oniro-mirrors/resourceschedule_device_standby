@@ -40,13 +40,13 @@ const std::string MOTION_DECTION_TASK = "motion_dection_task";
 const std::string NAP_SWITCH = "nap_switch";
 const std::string SLEEP_SWITCH = "sleep_switch";
 
-const int32_t MOTION_DECTION_TIME_OUT = 3000;
-const int32_t REST_TIME_OUT = 5000;
-const int32_t TOTAL_TIME_OUT = 30000;
+const int32_t MOTION_DETECTION_TIMEOUT = 3000;
+const int32_t REST_TIMEOUT = 5000;
+const int32_t TOTAL_TIMEOUT = 30000;
 
-extern const int32_t PERIODLY_TASK_DECTION_TIME_OUT = 210;
-extern const int32_t PERIODLY_TASK_REST_TIME_OUT = 10;
-extern const int32_t PERIODLY_TASK_TOTAL_TIME_OUT = 220;
+const int32_t PERIODLY_TASK_DECTION_TIMEOUT = 210;
+const int32_t PERIODLY_TASK_REST_TIMEOUT = 10;
+const int32_t PERIODLY_TASK_TOTAL_TIMEOUT = 220;
 
 const int64_t SENSOR_SAMPLING_RATE = 200000000LL; // 200ms
 const int64_t SENSOR_REPORTING_RATE = 0LL;
@@ -70,9 +70,9 @@ const std::string DUMP_SLEEP_MODE = "sleep";
 const std::string DUMP_DAYTIME_SLEEP_MODE = "daytimesleep";
 const std::string DUMP_NIGHTTIME_SLEEP_MODE = "nighttimesleep";
 
-extern const std::string DUMP_DETAIL_INFO = "-D";
-extern const std::string DUMP_ENTER_STATE = "-E";
-extern const std::string DUMP_APPLY_ALLOW_RECORD = "-A";
-extern const std::string DUMP_SIMULATE_SENSOR = "-S";
+const std::string DUMP_DETAIL_INFO = "-D";
+const std::string DUMP_ENTER_STATE = "-E";
+const std::string DUMP_APPLY_ALLOW_RECORD = "-A";
+const std::string DUMP_SIMULATE_SENSOR = "-S";
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

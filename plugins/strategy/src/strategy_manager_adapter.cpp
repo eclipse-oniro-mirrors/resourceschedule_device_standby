@@ -57,7 +57,7 @@ void StrategyManagerAdapter::RegisterPolicy(const std::vector<std::string>& stra
             strategyPtr = std::make_shared<TimerStrategy>();
         } else if (iter == "RUNNING_LOCK") {
             strategyPtr = std::make_shared<RunningLockStrategy>();
-        } else if(iter == "WORK_SCHEDULER") {
+        } else if (iter == "WORK_SCHEDULER") {
             strategyPtr = std::make_shared<WorkSchedulerStrategy>();
         } else {
             continue;

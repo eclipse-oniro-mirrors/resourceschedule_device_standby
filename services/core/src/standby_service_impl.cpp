@@ -49,7 +49,7 @@ namespace DevStandbyMgr {
 namespace {
 const std::string ALLOW_RECORD_FILE_PATH = "/data/service/el1/public/device_standby/allow_record";
 const std::string STANDBY_MSG_HANDLER = "StandbyMsgHandler";
-const std::string ON_PLUGIN_REGISTER = "onPluginRegister";
+const std::string ON_PLUGIN_REGISTER = "OnPluginRegister";
 }
 
 IMPLEMENT_SINGLE_INSTANCE(StandbyServiceImpl);
@@ -86,7 +86,7 @@ bool StandbyServiceImpl::Init()
 void StandbyServiceImpl::InitReadyState()
 {
     STANDBYSERVICE_LOGI("start init necessary plugin");
-    handler_->PostTask([this](){
+    handler_->PostTask([this]() {
         standbySubscriber_ = StandbyStateSubscriber::GetInstance();
         if (!standbyStateManager_->Init()) {
             STANDBYSERVICE_LOGE("standby state manager init failed");
@@ -107,7 +107,7 @@ void StandbyServiceImpl::InitReadyState()
         RegisterTimeObserver();
         ParsePersistentData();
         isServiceReady_.store(true);
-    }, AppExecFwk::EventQueue::Priority::HIGH);
+        }, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 ErrCode StandbyServiceImpl::RegisterCommEventObserver()
@@ -131,7 +131,7 @@ ErrCode StandbyServiceImpl::RegisterCommEventObserver()
 
 void StandbyServiceImpl::DayNightSwitchCallback()
 {
-    handler_->PostTask([standbyImpl = shared_from_this()](){
+    handler_->PostTask([standbyImpl = shared_from_this()]() {
         STANDBYSERVICE_LOGD("start day and night switch");
         auto curState = standbyImpl->standbyStateManager_->GetCurState();
         standbyImpl->standbySubscriber_->ReportStandbyState(curState);
@@ -465,8 +465,9 @@ ErrCode StandbyServiceImpl::ApplyAllowResource(const sptr<ResourceRequest>& reso
         return ERR_RESOURCE_TYPES_INVALID;
     }
     int32_t pid = IPCSkeleton::GetCallingPid();
-    handler_->PostTask([this, resourceRequest, pid]()
-        { this->ApplyAllowResInner(resourceRequest, pid); }, AppExecFwk::EventQueue::Priority::HIGH);
+    handler_->PostTask([this, resourceRequest, pid]() {
+        this->ApplyAllowResInner(resourceRequest, pid);
+        }, AppExecFwk::EventQueue::Priority::HIGH);
     return ERR_OK;
 }
 
@@ -532,7 +533,7 @@ void StandbyServiceImpl::UpdateRecord(std::shared_ptr<AllowRecord>& allowRecord,
         auto& allowTimeList = allowRecord->allowTimeList_;
         auto findRecordTask = [allowTypeIndex](const auto& it) { return it.allowTypeIndex_ == allowTypeIndex; };
         auto it = std::find_if(allowTimeList.begin(), allowTimeList.end(), findRecordTask);
-        if (it == allowTimeList.end()){
+        if (it == allowTimeList.end()) {
             allowTimeList.emplace_back(AllowTime{allowTypeIndex, endTime, resourceRequest->GetReason()});
         } else {
             it->reason_ = resourceRequest->GetReason();
@@ -561,9 +562,10 @@ ErrCode StandbyServiceImpl::UnapplyAllowResource(const sptr<ResourceRequest>& re
         STANDBYSERVICE_LOGE("param of resourceRequest is invalid");
         return ERR_RESOURCE_TYPES_INVALID;
     }
-    handler_->PostTask([this, resourceRequest]() { this->UnapplyAllowResInner(resourceRequest->GetUid(),
-        resourceRequest->GetName(), resourceRequest->GetAllowType(), true); },
-        AppExecFwk::EventQueue::Priority::HIGH);
+    handler_->PostTask([this, resourceRequest]() {
+        this->UnapplyAllowResInner(resourceRequest->GetUid(),
+        resourceRequest->GetName(), resourceRequest->GetAllowType(), true);
+        }, AppExecFwk::EventQueue::Priority::HIGH);
     return ERR_OK;
 }
 
@@ -637,7 +639,7 @@ ErrCode StandbyServiceImpl::GetAllowList(uint32_t allowType, std::vector<AllowIn
         STANDBYSERVICE_LOGE("allowtype param is invalid");
         return ERR_RESOURCE_TYPES_INVALID;
     }
-    handler_->PostSyncTask([this, allowType, &allowInfoList, reasonCode](){
+    handler_->PostSyncTask([this, allowType, &allowInfoList, reasonCode]() {
         this->GetAllowListInner(allowType, allowInfoList, reasonCode);
         }, AppExecFwk::EventQueue::Priority::HIGH);
     return ERR_OK;
@@ -671,7 +673,7 @@ void StandbyServiceImpl::GetTemporaryAllowList(uint32_t allowTypeIndex, std::vec
         }
         auto& allowTimeList = allowRecordPtr->allowTimeList_;
         auto it = std::find_if(allowTimeList.begin(), allowTimeList.end(), findRecordTask);
-        if (it == allowTimeList.end()){
+        if (it == allowTimeList.end()) {
             continue;
         }
         allowInfoList.emplace_back((1 << allowTypeIndex), allowRecordPtr->name_,
@@ -702,7 +704,7 @@ ErrCode StandbyServiceImpl::IsDeviceInStandby(bool& isStandby)
         STANDBYSERVICE_LOGD("standby service is not ready");
         return ERR_STANDBY_SYS_NOT_READY;
     }
-    handler_->PostSyncTask([this, &isStandby](){
+    handler_->PostSyncTask([this, &isStandby]() {
         auto curState = standbyStateManager_->GetCurState();
         isStandby = (curState == StandbyState::SLEEP);
         }, AppExecFwk::EventQueue::Priority::HIGH);
@@ -729,7 +731,7 @@ void StandbyServiceImpl::ShellDump(const std::vector<std::string>& argsInStr,
         result += "please using root identity\n";
         return;
     }
-    handler_->PostSyncTask([this, &argsInStr, &result](){
+    handler_->PostSyncTask([this, &argsInStr, &result]() {
         this->ShellDumpInner(argsInStr, result);
         }, AppExecFwk::EventQueue::Priority::HIGH);
 }

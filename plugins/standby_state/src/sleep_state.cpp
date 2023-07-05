@@ -30,6 +30,9 @@
 using namespace OHOS::MiscServices;
 namespace OHOS {
 namespace DevStandbyMgr {
+namespace {
+    constexpr int32_t DUMP_REPEAT_DETECTION_TIMEOUT = 100;
+}
 
 SleepState::SleepState(uint32_t curState, uint32_t curPhase, const std::shared_ptr<IStateManagerAdapter>&
     stateManager, std::shared_ptr<AppExecFwk::EventHandler>& handler): BaseState(curState,
@@ -57,7 +60,7 @@ ErrCode SleepState::Init()
 
 void SleepState::StartPeriodlyMotionDetection()
 {
-    handler_->PostTask([sleepState = shared_from_this()](){
+    handler_->PostTask([sleepState = shared_from_this()]() {
         sleepState->isRepeatedDetection_ = true;
         ConstraintEvalParam params{sleepState->curState_, sleepState->curPhase_,
             sleepState->curState_, sleepState->curPhase_};
@@ -67,7 +70,7 @@ void SleepState::StartPeriodlyMotionDetection()
             return;
         }
         stateManagerPtr->StartEvalCurrentState(params);
-    }, REPEATED_MOTION_DETECTION_TASK);
+        }, REPEATED_MOTION_DETECTION_TASK);
 }
 
 ErrCode SleepState::UnInit()
@@ -99,7 +102,7 @@ ErrCode SleepState::BeginState()
     curPhase_ = SleepStatePhase::SYS_RES_DEEP;
     maintIntervalTimeOut = CalculateMaintTimeOut(stateManagerPtr, true);
     BaseState::GetPhaseRunningLock()->Lock();
-    handler_->PostTask([sleepState = shared_from_this()](){
+    handler_->PostTask([sleepState = shared_from_this()]() {
         sleepState->TransitToPhase(sleepState->curPhase_, sleepState->curPhase_ + 1);
         }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     StartStateTransitionTimer(maintIntervalTimeOut);
@@ -111,9 +114,9 @@ void SleepState::TryToEnterNextPhase(const std::shared_ptr<IStateManagerAdapter>
 {
     if (stateManagerPtr->IsEvalution()) {
         STANDBYSERVICE_LOGW("state is in evalution, postpone to enter next phase");
-        handler_->PostTask([sleepState = shared_from_this(), stateManagerPtr, retryTimeOut](){
-            sleepState->TryToEnterNextPhase(stateManagerPtr, retryTimeOut); },
-            TRANSIT_NEXT_PHASE_INSTANT_TASK, retryTimeOut);
+        handler_->PostTask([sleepState = shared_from_this(), stateManagerPtr, retryTimeOut]() {
+            sleepState->TryToEnterNextPhase(stateManagerPtr, retryTimeOut);
+            }, TRANSIT_NEXT_PHASE_INSTANT_TASK, retryTimeOut);
     } else if (curPhase_ < SleepStatePhase::END) {
         TransitToPhase(curPhase_, curPhase_ + 1);
     }
@@ -162,9 +165,9 @@ void SleepState::SetPhaseTransitOrRepeatedTask()
 {
     curPhase_ += 1;
     if (curPhase_ < SleepStatePhase::END) {
-        handler_->PostTask([sleepState = shared_from_this()](){
-            sleepState->TransitToPhase(sleepState->curPhase_, sleepState->curPhase_ + 1); },
-            TRANSIT_NEXT_PHASE_INSTANT_TASK);
+        handler_->PostTask([sleepState = shared_from_this()]() {
+            sleepState->TransitToPhase(sleepState->curPhase_, sleepState->curPhase_ + 1);
+            }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     } else {
         BaseState::GetPhaseRunningLock()->Lock();
         if (repeatedDetectionTimerId_ == 0 || !MiscServices::TimeServiceClient::GetInstance()->
@@ -180,10 +183,10 @@ void SleepState::ShellDump(const std::vector<std::string>& argsInStr, std::strin
     if (argsInStr[0] == DUMP_SIMULATE_SENSOR) {
         if (argsInStr[1] == "--repeat") {
             StartPeriodlyMotionDetection();
-            handler_->PostTask([this](){
+            handler_->PostTask([this]() {
                 STANDBYSERVICE_LOGD("after 100ms, stop sensor");
                 stateManager_.lock()->EndEvalCurrentState(false);;
-            }, 100);
+                }, DUMP_REPEAT_DETECTION_TIMEOUT);
             result += "finished start repeated sensor\n";
         }
     }

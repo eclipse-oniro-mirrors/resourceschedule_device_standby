@@ -26,8 +26,8 @@
 namespace OHOS {
 namespace DevStandbyMgr {
 
-CommonEventListener::CommonEventListener(const EventFwk::CommonEventSubscribeInfo& subscribeInfo) :
-    EventFwk::CommonEventSubscriber(subscribeInfo)
+CommonEventListener::CommonEventListener(const EventFwk::CommonEventSubscribeInfo& subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
     handler_ = StandbyServiceImpl::GetInstance()->GetHandler();
     standbyStateManager_ = StandbyServiceImpl::GetInstance()->GetStateManager();
@@ -67,7 +67,7 @@ void CommonEventListener::OnReceiveEvent(const EventFwk::CommonEventData& eventD
             isScreenOn_ = false;
             StandbyServiceImpl::GetInstance()->DispatchEvent(StandbyMessage(StandbyMessageType::COMMON_EVENT, action));
         });
-    } else if(action == EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING ||
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING ||
         action == EventFwk::CommonEventSupport::COMMON_EVENT_USB_DEVICE_ATTACHED ||
         action == EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING ||
         action == EventFwk::CommonEventSupport::COMMON_EVENT_USB_DEVICE_DETACHED) {

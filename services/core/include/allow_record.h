@@ -26,8 +26,8 @@ namespace DevStandbyMgr {
 
 struct AllowTime {
     AllowTime() = default;
-    AllowTime(uint32_t allowTypeIndex, int64_t endTime, const std::string& reason) :
-        allowTypeIndex_(allowTypeIndex), endTime_(endTime), reason_(reason) {}
+    AllowTime(uint32_t allowTypeIndex, int64_t endTime, const std::string& reason)
+        : allowTypeIndex_(allowTypeIndex), endTime_(endTime), reason_(reason) {}
     uint32_t allowTypeIndex_;
     int64_t endTime_ {0};
     std::string reason_ {""};
@@ -35,8 +35,8 @@ struct AllowTime {
 
 struct AllowRecord {
     AllowRecord() = default;
-    AllowRecord(int32_t uid, int32_t pid, const std::string& name, uint32_t allowType):
-        uid_(uid), pid_(pid), name_(name), allowType_(allowType) {}
+    AllowRecord(int32_t uid, int32_t pid, const std::string& name, uint32_t allowType)
+        : uid_(uid), pid_(pid), name_(name), allowType_(allowType) {}
     nlohmann::json ParseToJson();
     bool ParseFromJson(const nlohmann::json& value);
 

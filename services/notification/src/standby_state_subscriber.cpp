@@ -167,7 +167,8 @@ void StandbyStateSubscriber::HandleSubscriberDeath(const wptr<IRemoteObject>& re
     STANDBYSERVICE_LOGD("suscriber death, remove it from list");
 }
 
-std::list<sptr<IStandbyServiceSubscriber>>::iterator StandbyStateSubscriber::FindSubcriberObject(sptr<IRemoteObject>& proxy)
+std::list<sptr<IStandbyServiceSubscriber>>::iterator StandbyStateSubscriber::FindSubcriberObject(
+    sptr<IRemoteObject>& proxy)
 {
     auto findSuscriber = [&proxy](const auto& subscriber) {
         return subscriber->AsObject() == proxy;

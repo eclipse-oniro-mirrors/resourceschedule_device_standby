@@ -63,8 +63,9 @@ ErrCode NapState::BeginState()
     STANDBYSERVICE_LOGD("napTimeOut is %{public}ld ms", napTimeOut);
     StartStateTransitionTimer(napTimeOut);
     BaseState::GetPhaseRunningLock()->Lock();
-    handler_->PostTask([napState = shared_from_this()](){
-        napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1); }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
+    handler_->PostTask([napState = shared_from_this()]() {
+        napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1);
+        }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     return ERR_OK;
 }
 
@@ -97,9 +98,9 @@ void NapState::SetPhaseTransitTask(bool evalResult)
     }
     curPhase_ += 1;
     if (curPhase_ < NapStatePhase::END) {
-        handler_->PostTask([napState = shared_from_this()](){
-            napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1); },
-            TRANSIT_NEXT_PHASE_INSTANT_TASK);
+        handler_->PostTask([napState = shared_from_this()]() {
+            napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1);
+            }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     } else {
         BaseState::GetPhaseRunningLock()->UnLock();
     }

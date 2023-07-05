@@ -160,7 +160,8 @@ void StandbyServiceClient::ResetStandbyServiceClient()
     standbyServiceProxy_ = nullptr;
 }
 
-StandbyServiceClient::StandbyServiceDeathRecipient::StandbyServiceDeathRecipient(StandbyServiceClient& standbyServiceClient)
+StandbyServiceClient::StandbyServiceDeathRecipient::StandbyServiceDeathRecipient(
+    StandbyServiceClient& standbyServiceClient)
     : standbyServiceClient_(standbyServiceClient) {}
 
 StandbyServiceClient::StandbyServiceDeathRecipient::~StandbyServiceDeathRecipient() {}

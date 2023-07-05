@@ -52,7 +52,8 @@ void StandbyServiceSubscriberProxy::OnDeviceIdleMode(bool napped, bool sleeping)
     }
 }
 
-void StandbyServiceSubscriberProxy::OnAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType, bool added)
+void StandbyServiceSubscriberProxy::OnAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType,
+    bool added)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

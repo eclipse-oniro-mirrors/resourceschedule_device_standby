@@ -41,8 +41,8 @@ struct ConstraintEvalParam {
     uint32_t nextPhase_ {0};
     bool isRepeatedDetection_ {false};
     ConstraintEvalParam() = default;
-    ConstraintEvalParam(uint32_t curState, uint32_t curPhase, uint32_t nextState, uint32_t nextPhase):
-        curState_(curState), curPhase_(curPhase), nextState_(nextState), nextPhase_(nextPhase) {}
+    ConstraintEvalParam(uint32_t curState, uint32_t curPhase, uint32_t nextState, uint32_t nextPhase)
+        : curState_(curState), curPhase_(curPhase), nextState_(nextState), nextPhase_(nextPhase) {}
     inline uint32_t GetHashValue() const {
         if (isRepeatedDetection_) {
             return (curState_ << 24) + (curPhase_ << 16) + (nextState_ << 8) + (nextPhase_ << 1) + 1;

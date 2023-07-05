@@ -466,7 +466,8 @@ bool StandbyConfigManager::ParseDefaultResCtrlConfig(const std::string& resCtrlK
         for (const auto &singleLtdAppItem : limitedAppItems) {
             TimeLtdProcess timeLtdApps;
             if (!JsonUtils::GetStringFromJsonValue(singleLtdAppItem, TAG_NAME, timeLtdApps.name_) ||
-                !JsonUtils::GetInt32FromJsonValue(singleLtdAppItem, TAG_MAX_DURATION_LIM, timeLtdApps.maxDurationLim_)) {
+                !JsonUtils::GetInt32FromJsonValue(singleLtdAppItem, TAG_MAX_DURATION_LIM,
+                timeLtdApps.maxDurationLim_)) {
                 STANDBYSERVICE_LOGE("there is error in %{public}s config", resCtrlKey.c_str());
                 return false;
             }
@@ -491,7 +492,7 @@ bool StandbyConfigManager::ParseCommonResCtrlConfig(const nlohmann::json& single
     std::string resCtrlAction;
     if (!JsonUtils::GetStringFromJsonValue(singleConfigItem, TAG_ACTION, resCtrlAction)) {
         STANDBYSERVICE_LOGE("get action config failed");
-    } else if (resCtrlAction == TAG_ALLOW){
+    } else if (resCtrlAction == TAG_ALLOW) {
         resCtrlConfig.isAllow_ = true;
     }
     const nlohmann::json& conditionItems = singleConfigItem.at(TAG_CONDITION);

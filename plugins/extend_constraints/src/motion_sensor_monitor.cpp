@@ -52,7 +52,7 @@ bool MotionSensorMonitor::CheckSersorConfig(SensorInfo *sensorInfo, int32_t coun
 
 void MotionSensorMonitor::AcceleromterCallback(SensorEvent *event)
 {
-    if(event == NULL){
+    if (event == NULL) {
         return;
     }
     AccelData* sensorData = (AccelData*)event->data;
@@ -61,7 +61,7 @@ void MotionSensorMonitor::AcceleromterCallback(SensorEvent *event)
         StandbyConfigManager::GetInstance()->GetStandbyParam(MOTION_THREADSHOLD));
     if (MotionSensorMonitor::GetEnergy() > StandbyConfigManager::GetInstance()->
             GetStandbyParam(MOTION_THREADSHOLD)) {
-        StandbyServiceImpl::GetInstance()->GetHandler()->PostTask([](){
+        StandbyServiceImpl::GetInstance()->GetHandler()->PostTask([]() {
             StandbyServiceImpl::GetInstance()->GetStateManager()->EndEvalCurrentState(false);
             }, MOTION_DECTION_TASK);
     }
@@ -69,7 +69,7 @@ void MotionSensorMonitor::AcceleromterCallback(SensorEvent *event)
 
 void MotionSensorMonitor::RepeatAcceleromterCallback(SensorEvent *event)
 {
-    if(event == NULL){
+    if (event == NULL) {
         return;
     }
     STANDBYSERVICE_LOGD("periodly receive Acceleromter motion sensor callback");
@@ -79,7 +79,7 @@ void MotionSensorMonitor::RepeatAcceleromterCallback(SensorEvent *event)
         StandbyConfigManager::GetInstance()->GetStandbyParam(MOTION_THREADSHOLD) * 1.0 / COUNT_TIMES);
     if (MotionSensorMonitor::GetEnergy() > StandbyConfigManager::GetInstance()->
             GetStandbyParam(MOTION_THREADSHOLD) * 1.0 / COUNT_TIMES) {
-        StandbyServiceImpl::GetInstance()->GetHandler()->PostTask([](){
+        StandbyServiceImpl::GetInstance()->GetHandler()->PostTask([]() {
             StandbyServiceImpl::GetInstance()->GetStateManager()->EndEvalCurrentState(false);
             }, MOTION_DECTION_TASK);
     }
@@ -87,7 +87,7 @@ void MotionSensorMonitor::RepeatAcceleromterCallback(SensorEvent *event)
 
 void MotionSensorMonitor::MotionSensorCallback(SensorEvent *event)
 {
-    StandbyServiceImpl::GetInstance()->GetHandler()->PostTask([](){
+    StandbyServiceImpl::GetInstance()->GetHandler()->PostTask([]() {
         StandbyServiceImpl::GetInstance()->GetStateManager()->EndEvalCurrentState(false);
         }, MOTION_DECTION_TASK);
 }
@@ -143,7 +143,7 @@ bool MotionSensorMonitor::Init()
 void MotionSensorMonitor::StartMonitoring()
 {
     STANDBYSERVICE_LOGD("start motion sensor monitoring");
-    handler_->PostTask([this](){
+    handler_->PostTask([this]() {
         STANDBYSERVICE_LOGI("stop motion sensor monitoring");
         StandbyServiceImpl::GetInstance()->GetStateManager()->EndEvalCurrentState(true);
         }, MOTION_DECTION_TASK, totalTimeOut_);
@@ -152,7 +152,7 @@ void MotionSensorMonitor::StartMonitoring()
 
 void MotionSensorMonitor::StopMotionDetection()
 {
-    handler_->PostTask([this](){
+    handler_->PostTask([this]() {
         StopMonitoringInner();
         }, MOTION_DECTION_TASK, detectionTimeOut_);
 }
@@ -164,7 +164,7 @@ void MotionSensorMonitor::PeriodlyStartMotionDetection()
         return;
     }
     StopMotionDetection();
-    handler_->PostTask([this](){
+    handler_->PostTask([this]() {
         PeriodlyStartMotionDetection();
         }, MOTION_DECTION_TASK, detectionTimeOut_ + restTimeOut_);
 }
@@ -173,7 +173,7 @@ ErrCode MotionSensorMonitor::StartMonitoringInner()
 {
     energy_ = 0;
     isMonitoring = true;
-    if (StartSensor(SENSOR_TYPE_ID_ACCELEROMETER, &acceSensorUser_) == ERR_OK ||
+    if (StartSensor(SENSOR_TYPE_ID_ACCELEROMETER, &acceSensorUser_) == ERR_OK &&
         StartSensor(SENSOR_TYPE_ID_SIGNIFICANT_MOTION, &motionSensorUser_) == ERR_OK) {
         return ERR_OK;
     }

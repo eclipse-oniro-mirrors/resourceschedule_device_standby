@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace DevStandbyMgr {
-extern "C" bool onPluginRegister()
+extern "C" bool OnPluginRegister()
 {
     IConstraintManagerAdapter* constraintManager = new ConstraintManagerAdapter();
     IListenerManagerAdapter* listenerManager = new ListenerManagerAdapter();

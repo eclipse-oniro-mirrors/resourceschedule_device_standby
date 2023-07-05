@@ -262,10 +262,10 @@ void StateManagerAdapter::DumpActivateMotion(const std::vector<std::string>& arg
 {
     if (argsInStr[1] == "--motion") {
         curStatePtr_->TryToTransitNextState();
-        handler_->PostTask([this](){
+        handler_->PostTask([this]() {
             STANDBYSERVICE_LOGD("after 3000ms, stop sensor");
             this->EndEvalCurrentState(false);
-        }, 3000);
+            }, MOTION_DETECTION_TIMEOUT);
         result += "finished start periodly sensor\n";;
     }
 }

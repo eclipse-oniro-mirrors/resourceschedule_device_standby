@@ -35,15 +35,15 @@ bool ConstraintManagerAdapter::Init()
     if (StandbyConfigManager::GetInstance()->GetStandbySwitch(DETECT_MOTION_CONFIG)) {
         ConstraintEvalParam motionDetectParams{StandbyState::NAP, NapStatePhase::END, StandbyState::SLEEP,
             SleepStatePhase::SYS_RES_DEEP};
-        motionConstraint_ = std::make_shared<MotionSensorMonitor>(MOTION_DECTION_TIME_OUT, REST_TIME_OUT,
-            TOTAL_TIME_OUT, motionDetectParams);
+        motionConstraint_ = std::make_shared<MotionSensorMonitor>(MOTION_DETECTION_TIMEOUT, REST_TIMEOUT,
+            TOTAL_TIMEOUT, motionDetectParams);
         constraintMonitorList_.emplace_back(motionConstraint_);
 
         ConstraintEvalParam repeatedMotionParams{StandbyState::SLEEP, SleepStatePhase::END, StandbyState::SLEEP,
             SleepStatePhase::END};
         repeatedMotionParams.isRepeatedDetection_ = true;
-        repeatedMotionConstraint_ = std::make_shared<MotionSensorMonitor>(PERIODLY_TASK_DECTION_TIME_OUT,
-            PERIODLY_TASK_REST_TIME_OUT, PERIODLY_TASK_TOTAL_TIME_OUT, repeatedMotionParams);
+        repeatedMotionConstraint_ = std::make_shared<MotionSensorMonitor>(PERIODLY_TASK_DECTION_TIMEOUT,
+            PERIODLY_TASK_REST_TIMEOUT, PERIODLY_TASK_TOTAL_TIMEOUT, repeatedMotionParams);
         constraintMonitorList_.emplace_back(repeatedMotionConstraint_);
     }
     for (const auto& constraintMonitor : constraintMonitorList_) {
@@ -59,8 +59,8 @@ bool ConstraintManagerAdapter::UnInit()
     constraintMap_.clear();
     stateManager_.reset();
     curMonitor_.reset();
-    stateManager_.reset();
     isEvaluation_ = false;
+    repeatedMotionConstraint_.reset();
     motionConstraint_.reset();
     return true;
 }
