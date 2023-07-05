@@ -76,7 +76,7 @@ public:
      *
      * @return the uid.
      */
-    inline uint32_t GetUid() const
+    inline int32_t GetUid() const
     {
         return uid_;
     }

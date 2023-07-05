@@ -28,9 +28,11 @@ namespace {
 }
 
 double MotionSensorMonitor::energy_ = 0;
-bool MotionSensorMonitor::isPrevDataEmpty = false;
-AccelData MotionSensorMonitor::previousAccelData {0, 0, 0};
-AccelData MotionSensorMonitor::currentAccelData {0, 0, 0};
+// use the difference between two acceleration data to judge the motion state
+// hasPrevAccelData_ is true if we has previous acceleration data to calculate the difference
+bool MotionSensorMonitor::hasPrevAccelData_ = false;
+AccelData MotionSensorMonitor::previousAccelData_ {0, 0, 0};
+AccelData MotionSensorMonitor::currentAccelData_ {0, 0, 0};
 
 MotionSensorMonitor::MotionSensorMonitor(int32_t detectionTimeOut, int32_t restTimeOut, int32_t totalTimeOut,
     const ConstraintEvalParam& params): detectionTimeOut_(detectionTimeOut), restTimeOut_(restTimeOut),
@@ -104,13 +106,13 @@ void MotionSensorMonitor::SetEnergy(double energy)
 
 void MotionSensorMonitor::AddEnergy(AccelData *accelData)
 {
-    currentAccelData = *accelData;
-    if (!isPrevDataEmpty) {
-        isPrevDataEmpty = true;
-        previousAccelData = currentAccelData;
+    currentAccelData_ = *accelData;
+    if (!hasPrevAccelData_) {
+        hasPrevAccelData_ = true;
+        previousAccelData_ = currentAccelData_;
     }
-    AccelData diff {currentAccelData.x - previousAccelData.x, currentAccelData.y - previousAccelData.y,
-        currentAccelData.z - previousAccelData.z};
+    AccelData diff {currentAccelData_.x - previousAccelData_.x, currentAccelData_.y - previousAccelData_.y,
+        currentAccelData_.z - previousAccelData_.z};
     energy_ += (diff.x *  diff.x) + (diff.y *  diff.y) + (diff.z *  diff.z);
 }
 
@@ -172,7 +174,7 @@ void MotionSensorMonitor::PeriodlyStartMotionDetection()
 ErrCode MotionSensorMonitor::StartMonitoringInner()
 {
     energy_ = 0;
-    isMonitoring = true;
+    isMonitoring_ = true;
     if (StartSensor(SENSOR_TYPE_ID_ACCELEROMETER, &acceSensorUser_) == ERR_OK &&
         StartSensor(SENSOR_TYPE_ID_SIGNIFICANT_MOTION, &motionSensorUser_) == ERR_OK) {
         return ERR_OK;
@@ -190,7 +192,7 @@ void MotionSensorMonitor::StopMonitoringInner()
 {
     StopSensor(SENSOR_TYPE_ID_ACCELEROMETER, &acceSensorUser_);
     StopSensor(SENSOR_TYPE_ID_SIGNIFICANT_MOTION, &motionSensorUser_);
-    isMonitoring = false;
+    isMonitoring_ = false;
 }
 
 ErrCode MotionSensorMonitor::StartSensor(int32_t sensorTypeId, SensorUser* sensorUser)
@@ -210,7 +212,9 @@ ErrCode MotionSensorMonitor::StartSensor(int32_t sensorTypeId, SensorUser* senso
 
 void MotionSensorMonitor::StopSensor(int32_t sensorTypeId, SensorUser* sensorUser)
 {
-    if (!isMonitoring) {
+    hasPrevAccelData_ = false;
+    previousAccelData_ = {0, 0, 0};
+    if (!isMonitoring_) {
         return;
     }
     if (DeactivateSensor(sensorTypeId, sensorUser) != 0) {

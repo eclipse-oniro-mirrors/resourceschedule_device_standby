@@ -255,7 +255,7 @@ napi_value ParseAllowResParameters(const napi_env &env, const napi_callback_info
     std::string reason {};
 
     if (!Common::GetNamedInt32Value(env, argv[0], "resourceTypes", allowType) || allowType <= 0
-        || allowType > MAX_ALLOW_TYPE_NUMBER) {
+        || static_cast<uint32_t>(allowType) > MAX_ALLOW_TYPE_NUMBER) {
         Common::HandleParamErr(env, ERR_RESOURCE_TYPES_INVALID);
         return nullptr;
     }

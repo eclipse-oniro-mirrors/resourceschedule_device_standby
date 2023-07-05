@@ -471,7 +471,7 @@ ErrCode StandbyServiceImpl::ApplyAllowResource(const sptr<ResourceRequest>& reso
     if (auto checkRet = CheckCallerPermission(resourceRequest->GetReasonCode()); checkRet != ERR_OK) {
         return checkRet;
     }
-    if (!CheckAllowTypeInfo(resourceRequest->GetAllowType())) {
+    if (!CheckAllowTypeInfo(resourceRequest->GetAllowType()) || resourceRequest->GetUid() < 0) {
         STANDBYSERVICE_LOGE("resourceRequest param is invalid");
         return ERR_RESOURCE_TYPES_INVALID;
     }
@@ -579,7 +579,7 @@ ErrCode StandbyServiceImpl::UnapplyAllowResource(const sptr<ResourceRequest>& re
     if (auto checkRet = CheckCallerPermission(resourceRequest->GetReasonCode()); checkRet != ERR_OK) {
         return checkRet;
     }
-    if (!CheckAllowTypeInfo(resourceRequest->GetAllowType())) {
+    if (!CheckAllowTypeInfo(resourceRequest->GetAllowType()) || resourceRequest->GetUid() < 0) {
         STANDBYSERVICE_LOGE("param of resourceRequest is invalid");
         return ERR_RESOURCE_TYPES_INVALID;
     }

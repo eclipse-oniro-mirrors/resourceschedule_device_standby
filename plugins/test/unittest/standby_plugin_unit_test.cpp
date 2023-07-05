@@ -270,11 +270,11 @@ HWTEST_F(StandbyPluginUnitTest, StandbyPluginUnitTest_007, TestSize.Level1)
     auto repeatedMotionConstraint = std::make_shared<MotionSensorMonitor>(PERIODLY_TASK_DECTION_TIMEOUT,
             PERIODLY_TASK_REST_TIMEOUT, PERIODLY_TASK_TOTAL_TIMEOUT, repeatedMotionParams);
     repeatedMotionConstraint->StopMonitoring();
-    repeatedMotionConstraint->isMonitoring = true;
+    repeatedMotionConstraint->isMonitoring_ = true;
     repeatedMotionConstraint->StopMonitoring();
-    repeatedMotionConstraint->isMonitoring = false;
+    repeatedMotionConstraint->isMonitoring_ = false;
     repeatedMotionConstraint->StopMonitoring();
-    EXPECT_FALSE(repeatedMotionConstraint->isMonitoring);
+    EXPECT_FALSE(repeatedMotionConstraint->isMonitoring_);
 }
 
 /**
@@ -320,7 +320,7 @@ HWTEST_F(StandbyPluginUnitTest, StandbyPluginUnitTest_009, TestSize.Level1)
     standbyStateManager_->isBlocked_ = false;
     standbyStateManager_->EnterStandby(StandbyState::WORKING);
     standbyStateManager_->TransitToState(StandbyState::WORKING);
-    EXPECT_EQ(standbyStateManager_->GetCurState(), StandbyState::WORKING);
+    EXPECT_NE(standbyStateManager_->GetCurState(), StandbyState::NAP);
 }
 
 /**

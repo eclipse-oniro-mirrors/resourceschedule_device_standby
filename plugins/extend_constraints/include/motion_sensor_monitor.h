@@ -61,12 +61,12 @@ private:
     SensorUser acceSensorUser_ {};
     SensorUser motionSensorUser_ {};
     static double energy_;
-    static bool isPrevDataEmpty;
-    static AccelData previousAccelData;
-    static AccelData currentAccelData;
+    static bool hasPrevAccelData_;
+    static AccelData previousAccelData_;
+    static AccelData currentAccelData_;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ {};
     ConstraintEvalParam params_{};
-    bool isMonitoring {false};
+    bool isMonitoring_ {false};
 };
 } // DevStandbyMgr
 } // OHOS
