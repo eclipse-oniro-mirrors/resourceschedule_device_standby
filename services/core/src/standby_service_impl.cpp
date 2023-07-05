@@ -443,7 +443,13 @@ int32_t StandbyServiceImpl::GetUserIdByUid(int32_t uid)
 
 ErrCode StandbyServiceImpl::SubscribeStandbyCallback(const sptr<IStandbyServiceSubscriber>& subscriber)
 {
-    STANDBYSERVICE_LOGI("add subscriber to stanby service succeed");
+    STANDBYSERVICE_LOGI("add %{public}s subscriber to stanby service", subscriber->GetSubscriberName().c_str());
+    const auto& strategyConfigList = StandbyConfigManager::GetInstance()->GetStrategyConfigList();
+    auto item = std::find(strategyConfigList.begin(), strategyConfigList.end(), subscriber->GetSubscriberName());
+    if (item == strategyConfigList.end()) {
+        STANDBYSERVICE_LOGI("%{public}s is not exist in StrategyConfigList", subscriber->GetSubscriberName().c_str());
+        return ERR_STANDBY_STRATEGY_NOT_DEPLOY;
+    }
     return standbySubscriber_->AddSubscriber(subscriber);
 }
 
@@ -757,6 +763,8 @@ void StandbyServiceImpl::ShellDumpInner(const std::vector<std::string>& argsInSt
         DumpModifyAllowList(argsInStr, result);
     } else if (argsInStr[0] == DUMP_SIMULATE_SENSOR) {
         DumpActivateMotion(argsInStr, result);
+    } else if (argsInStr[0] == DUMP_SUBSCRIBER_OBSERVER) {
+        DumpSubScriberObserver(argsInStr, result);
     } else {
         result += "Error params.\n";
     }
@@ -868,11 +876,15 @@ void StandbyServiceImpl::DumpModifyAllowList(const std::vector<std::string>& arg
     }
 }
 
-void StandbyServiceImpl::DumpActivateMotion(const std::vector<std::string>& argsInStr,
-    std::string& result)
+void StandbyServiceImpl::DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result)
 {
     standbyStateManager_->ShellDump(argsInStr, result);
     constraintManager_->ShellDump(argsInStr, result);
+}
+
+void StandbyServiceImpl::DumpSubScriberObserver(const std::vector<std::string>& argsInStr, std::string& result)
+{
+    standbySubscriber_->ShellDump(argsInStr, result);
 }
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

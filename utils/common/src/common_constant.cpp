@@ -74,5 +74,6 @@ const std::string DUMP_DETAIL_INFO = "-D";
 const std::string DUMP_ENTER_STATE = "-E";
 const std::string DUMP_APPLY_ALLOW_RECORD = "-A";
 const std::string DUMP_SIMULATE_SENSOR = "-S";
+const std::string DUMP_SUBSCRIBER_OBSERVER = "-O";
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

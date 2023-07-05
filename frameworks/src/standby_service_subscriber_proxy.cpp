@@ -66,8 +66,8 @@ void StandbyServiceSubscriberProxy::OnAllowListChanged(int32_t uid, const std::s
         return;
     }
 
-    if (!data.WriteInt32(uid) || !data.WriteUint32(allowType) ||
-        !data.WriteString(name) || !data.WriteBool(added)) {
+    if (!data.WriteInt32(uid) || !data.WriteString(name) ||
+        !data.WriteUint32(allowType) || !data.WriteBool(added)) {
         STANDBYSERVICE_LOGW("OnAllowListChanged write notification failed.");
         return;
     }

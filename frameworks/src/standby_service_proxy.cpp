@@ -45,6 +45,10 @@ ErrCode StandbyServiceProxy::SubscribeStandbyCallback(const sptr<IStandbyService
         STANDBYSERVICE_LOGW("SubscribeSleepStateEvent write subscriber failed");
         return ERR_STANDBY_PARCELABLE_FAILED;
     }
+    if (!data.WriteString(subscriber->GetSubscriberName())) {
+        STANDBYSERVICE_LOGW("SubscribeSleepStateEvent write SubscriberName failed");
+        return ERR_STANDBY_PARCELABLE_FAILED;
+    }
 
     ErrCode result = InnerTransact(SUBSCRIBE_STANDBY_CALLBACK, option, data, reply);
     if (result != ERR_OK) {

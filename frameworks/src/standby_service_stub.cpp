@@ -76,13 +76,16 @@ ErrCode StandbyServiceStub::OnRemoteRequest(uint32_t code,
 
 ErrCode StandbyServiceStub::HandleSubscribeStandbyCallback(MessageParcel& data, MessageParcel& reply)
 {
-    sptr<IRemoteObject> subscriber = data.ReadRemoteObject();
-    if (subscriber == nullptr) {
+    auto subscriber = iface_cast<IStandbyServiceSubscriber>(data.ReadRemoteObject());
+    if (!subscriber) {
         STANDBYSERVICE_LOGW("HandleSubscribeStandbyCallback Read callback fail.");
         return ERR_STANDBY_PARCELABLE_FAILED;
     }
+    std::string strategyName = data.ReadString();
+    STANDBYSERVICE_LOGD("HandleSubscribeStandbyCallback callback name is %{public}s 11111", strategyName.c_str());
+    subscriber->SetSubscriberName(strategyName);
 
-    ErrCode result = SubscribeStandbyCallback(iface_cast<IStandbyServiceSubscriber>(subscriber));
+    ErrCode result = SubscribeStandbyCallback(subscriber);
     if (!reply.WriteInt32(result)) {
         STANDBYSERVICE_LOGW("HandleSubscribeStandbyCallback Write result failed, ErrCode=%{public}d", result);
         return ERR_STANDBY_PARCELABLE_FAILED;

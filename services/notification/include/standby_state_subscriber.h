@@ -43,6 +43,7 @@ public:
     void ReportStandbyState(uint32_t curState);
     void ReportAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType, bool added);
     void HandleSubscriberDeath(const wptr<IRemoteObject>& remote);
+    void ShellDump(const std::vector<std::string>& argsInStr, std::string& result);
 
 private:
     void NotifyThroughCallback(bool napped, bool sleeping);

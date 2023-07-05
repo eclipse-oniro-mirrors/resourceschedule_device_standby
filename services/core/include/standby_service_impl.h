@@ -118,6 +118,7 @@ private:
     void DumpEnterSpecifiedState(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpModifyAllowList(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result);
+    void DumpSubScriberObserver(const std::vector<std::string>& argsInStr, std::string& result);
 
 private:
     std::atomic<bool> isServiceReady_ {false};

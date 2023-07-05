@@ -167,6 +167,20 @@ void StandbyStateSubscriber::HandleSubscriberDeath(const wptr<IRemoteObject>& re
     STANDBYSERVICE_LOGD("suscriber death, remove it from list");
 }
 
+void StandbyStateSubscriber::ShellDump(const std::vector<std::string>& argsInStr, std::string& result)
+{
+    if (subscriberList_.empty()) {
+        result += "subscriber observer record is empty\n";
+        return;
+    }
+    std::stringstream stream;
+    for (auto iter = subscriberList_.begin(); iter != subscriberList_.end(); iter++) {
+        stream << "\tobserverName: " << (*iter)->GetSubscriberName() << "\n";
+        result += stream.str();
+        stream.clear();
+    }
+}
+
 std::list<sptr<IStandbyServiceSubscriber>>::iterator StandbyStateSubscriber::FindSubcriberObject(
     sptr<IRemoteObject>& proxy)
 {

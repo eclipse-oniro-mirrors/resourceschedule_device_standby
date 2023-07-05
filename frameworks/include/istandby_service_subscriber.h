@@ -47,6 +47,26 @@ public:
      */
     virtual void OnAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType, bool added) = 0;
 
+    /**
+     * @brief get subscriberName.
+     *
+     * @return return subscriberName.
+     */
+    std::string GetSubscriberName()
+    {
+        return subscriberName_;
+    }
+
+    /**
+     * @brief set subscriberName.
+     *
+     * @param name strategy name which will register device_standby callback.
+     */
+    void SetSubscriberName(std::string name)
+    {
+        subscriberName_ = name;
+    }
+
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.resourceschedule.IStandbyServiceSubscriber");
 
@@ -55,6 +75,8 @@ protected:
         ON_DEVICE_IDLE_MODE = FIRST_CALL_TRANSACTION,
         ON_ALLOW_LIST_CHANGED,
     };
+private:
+    std::string subscriberName_;
 };
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

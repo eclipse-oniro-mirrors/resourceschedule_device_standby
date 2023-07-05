@@ -76,6 +76,7 @@ extern const std::string DUMP_DETAIL_INFO;
 extern const std::string DUMP_ENTER_STATE;
 extern const std::string DUMP_APPLY_ALLOW_RECORD;
 extern const std::string DUMP_SIMULATE_SENSOR;
+extern const std::string DUMP_SUBSCRIBER_OBSERVER;
 }  // namespace DevStandbyMgr
 }  // namespace OHOS
 
