@@ -467,6 +467,10 @@ ErrCode StandbyServiceImpl::ApplyAllowResource(const sptr<ResourceRequest>& reso
         STANDBYSERVICE_LOGE("resourceRequest param is invalid");
         return ERR_RESOURCE_TYPES_INVALID;
     }
+    if (resourceRequest->GetDuration() < 0) {
+        STANDBYSERVICE_LOGE("duration param is invalid");
+        return ERR_DURATION_INVALID;
+    }
     int32_t pid = IPCSkeleton::GetCallingPid();
     handler_->PostTask([this, resourceRequest, pid]() {
         this->ApplyAllowResInner(resourceRequest, pid);
@@ -529,7 +533,7 @@ void StandbyServiceImpl::UpdateRecord(std::shared_ptr<AllowRecord>& allowRecord,
             GetMaxDuration(name, AllowTypeName[allowTypeIndex], condition, isApp)) * TimeConstant::MSEC_PER_SEC;
         STANDBYSERVICE_LOGD("name is %{public}s, condition is %{public}d, res is %{public}s, duration is %{public}ld",
             name.c_str(), condition, AllowTypeName[allowTypeIndex].c_str(), maxDuration);
-        if (maxDuration == 0) {
+        if (maxDuration <= 0) {
             continue;
         }
         endTime = curTime +  maxDuration;

@@ -774,5 +774,48 @@ HWMTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_035, TestSize.Level1, 2
     StandbyStateSubscriber::GetInstance()->ReportStandbyState(StandbyState::SLEEP);
     EXPECT_TRUE(true);
 }
+
+/**
+ * @tc.name: StandbyServiceUnitTest_036
+ * @tc.desc: test OnRemoteRequestInner of StandbyStateSubscriber.
+ * @tc.type: FUNC
+ * @tc.require: AR000HQ6GA
+ */
+HWMTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_036, TestSize.Level1, 20)
+{
+    sptr<StandbyServiceSubscriberStub> subscriber = new (std::nothrow) StandbyServiceSubscriberStub();
+    MessageParcel data {};
+    MessageParcel reply {};
+    MessageOption option {MessageOption::TF_ASYNC};
+    data.WriteInterfaceToken(IStandbyServiceSubscriber::GetDescriptor());
+    subscriber->OnRemoteRequest(IStandbyServiceSubscriber::ON_DEVICE_IDLE_MODE, data, reply, option);
+    subscriber->OnRemoteRequest(IStandbyServiceSubscriber::ON_ALLOW_LIST_CHANGED, data, reply, option);
+    auto ret = subscriber->OnRemoteRequest(IStandbyServiceSubscriber::ON_ALLOW_LIST_CHANGED + 1, data, reply, option);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.name: StandbyServiceUnitTest_037
+ * @tc.desc: test OnRemoteRequestInner of StandbyService.
+ * @tc.type: FUNC
+ * @tc.require: AR000HQ6GA
+ */
+HWMTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_037, TestSize.Level1, 20)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option = {MessageOption::TF_ASYNC};
+    data.WriteInterfaceToken(IStandbyService::GetDescriptor());
+    StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::SUBSCRIBE_STANDBY_CALLBACK, data, reply, option);
+    StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::UNSUBSCRIBE_STANDBY_CALLBACK,
+        data, reply, option);
+    StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::APPLY_ALLOW_RESOURCE, data, reply, option);
+    StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::UNAPPLY_ALLOW_RESOURCE, data, reply, option);
+    StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::GET_ALLOW_LIST, data, reply, option);
+    StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::IS_DEVICE_IN_STANDBY, data, reply, option);
+    auto ret = StandbyService::GetInstance()->OnRemoteRequest(StandbyServiceStub::IS_DEVICE_IN_STANDBY + 1,
+        data, reply, option);
+    EXPECT_NE(ret, ERR_OK);
+}
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

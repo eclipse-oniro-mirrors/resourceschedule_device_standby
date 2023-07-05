@@ -109,6 +109,10 @@ ErrCode StandbyServiceStub::HandleUnsubscribeStandbyCallback(MessageParcel& data
 ErrCode StandbyServiceStub::HandleApplyAllowResource(MessageParcel& data, MessageParcel& reply)
 {
     auto resourceRequest = ResourceRequest::Unmarshalling(data);
+    if (resourceRequest == nullptr) {
+        STANDBYSERVICE_LOGW("HandleApplyAllowResource ReadParcelable failed");
+        return ERR_STANDBY_PARCELABLE_FAILED;
+    }
     ErrCode result = ApplyAllowResource(resourceRequest);
     if (!reply.WriteInt32(result)) {
         STANDBYSERVICE_LOGW("HandleApplyAllowResource Write result failed, ErrCode=%{public}d", result);
@@ -120,6 +124,10 @@ ErrCode StandbyServiceStub::HandleApplyAllowResource(MessageParcel& data, Messag
 ErrCode StandbyServiceStub::HandleUnapplyAllowResource(MessageParcel& data, MessageParcel& reply)
 {
     auto resourceRequest = ResourceRequest::Unmarshalling(data);
+    if (resourceRequest == nullptr) {
+        STANDBYSERVICE_LOGW("HandleUnapplyAllowResource ReadParcelable failed");
+        return ERR_STANDBY_PARCELABLE_FAILED;
+    }
     ErrCode result = UnapplyAllowResource(resourceRequest);
     if (!reply.WriteInt32(result)) {
         STANDBYSERVICE_LOGW("HandleUnapplyAllowResource Write result failed, ErrCode=%{public}d", result);
@@ -130,8 +138,12 @@ ErrCode StandbyServiceStub::HandleUnapplyAllowResource(MessageParcel& data, Mess
 
 ErrCode StandbyServiceStub::HandleGetAllowList(MessageParcel& data, MessageParcel& reply)
 {
-    uint32_t allowType = data.ReadUint32();
-    uint32_t reasonCode = data.ReadUint32();
+    uint32_t allowType {0};
+    uint32_t reasonCode {0};
+    if (!data.ReadUint32(allowType) || !data.ReadUint32(reasonCode)) {
+        STANDBYSERVICE_LOGW("HandleGetAllowList ReadParcelable failed");
+        return ERR_STANDBY_PARCELABLE_FAILED;
+    }
     std::vector<AllowInfo> allowInfoList {};
     ErrCode result = GetAllowList(allowType, allowInfoList, reasonCode);
     if (!reply.WriteInt32(result)) {
