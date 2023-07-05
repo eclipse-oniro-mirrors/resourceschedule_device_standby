@@ -22,12 +22,24 @@
     "ram": "10240KB",
     "deps": {
       "components": [
-        "eventhandler",
-        "ipc",
-        "c_utils",
+        "ability_base",
+        "ability_runtime",
+        "access_token",
+        "battery_manager",
+        "bundle_framework",
+        "common_event_service",
         "config_policy",
-        "hilog_native",
-        "samgr"
+        "c_utils",
+        "eventhandler",
+        "hiviewdfx_hilog_native",
+        "init",
+        "ipc",
+        "napi",
+        "power_manager",
+        "safwk",
+        "samgr",
+        "sensor",
+        "time_service"
       ],
       "third_party": [
         "googletest"
@@ -65,6 +77,81 @@
             ]
           },
           "name": "//foundation/resourceschedule/device_standby/interfaces/innerkits:standby_innerkits"
+        },
+        {
+          "header": {
+            "header_base": "//foundation/resourceschedule/device_standby/services",
+            "header_files": [
+              "common/include/device_standby_switch.h",
+              "common/include/time_provider.h",
+              "common/include/timed_task.h",
+              "core/include/ability_manager_helper.h",
+              "core/include/allow_record.h",
+              "core/include/app_mgr_helper.h",
+              "core/include/bundle_manager_helper.h",
+              "core/include/standby_service_impl.h",
+              "core/include/standby_service.h",
+              "notification/include/standby_state_subscriber.h"
+            ]
+          },
+          "name": "//foundation/resourceschedule/device_standby/services:standby_service"
+        },
+        {
+          "header": {
+            "header_base": "//foundation/resourceschedule/device_standby/utils/common/include",
+            "header_files": [
+              "common_constant.h",
+              "ipc_util.h",
+              "single_instance.h",
+              "standby_service_errors.h",
+              "standby_service_log.h"
+            ]
+          },
+          "name": "//foundation/resourceschedule/device_standby/utils/common:standby_utils_common"
+        },
+        {
+          "header": {
+            "header_base": "//foundation/resourceschedule/device_standby/utils/policy/include",
+            "header_files": [
+              "json_utils.h",
+              "standby_config_manager.h"
+            ]
+          },
+          "name": "//foundation/resourceschedule/device_standby/utils/policy:standby_utils_policy"
+        },
+        {
+          "header": {
+            "header_base": "//foundation/resourceschedule/device_standby/plugins",
+            "header_files": [
+              "ext/include/base_state.h",
+              "ext/include/ibase_strategy.h",
+              "ext/include/iconstraint_manager_adapter.h",
+              "ext/include/iconstraint_monitor.h",
+              "ext/include/ilistener_manager_adapter.h",
+              "ext/include/imessage_listener.h",
+              "ext/include/istate_manager_adapter.h",
+              "ext/include/istrategy_manager_adapter.h",
+              "ext/include/standby_messsage.h",
+              "extend_constraints/include/charge_state_monitor.h",
+              "extend_constraints/include/constraint_manager_adapter.h",
+              "extend_constraints/include/motion_sensor_monitor.h",
+              "message_listener/include/common_event_listener.h",
+              "message_listener/include/input_manager_listener.h",
+              "message_listener/include/listener_manager_adapter.h",
+              "standby_state/include/dark_state.h",
+              "standby_state/include/maintenance_state.h",
+              "standby_state/include/nap_state.h",
+              "standby_state/include/sleep_state.h",
+              "standby_state/include/state_manager_adapter.h",
+              "standby_state/include/working_state.h",
+              "strategy/include/network_strategy.h",
+              "strategy/include/running_lock_strategy.h",
+              "strategy/include/strategy_manager_adapter.h",
+              "strategy/include/timer_strategy.h",
+              "strategy/include/work_scheduler_strategy.h"
+            ]
+          },
+          "name": "//foundation/resourceschedule/device_standby/plugins:standby_plugin"
         }
       ],
       "test": [
