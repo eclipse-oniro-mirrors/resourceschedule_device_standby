@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
 
 ohos_sa_profile("device_standby_sa_profile") {
-  sources = [ "1914.xml" ]
+  sources = [ "1914.json" ]
 
   part_name = "device_standby"
 }
