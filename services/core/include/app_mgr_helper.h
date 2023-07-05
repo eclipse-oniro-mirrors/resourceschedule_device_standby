@@ -32,7 +32,35 @@ namespace DevStandbyMgr {
 class AppMgrHelper {
 DECLARE_SINGLE_INSTANCE(AppMgrHelper);
 public:
+    /**
+     * @brief Get the All Running Processes info.
+     *
+     * @param allAppProcessInfos process info of applications.
+     * @return true if subscribe successfully.
+     */
     bool GetAllRunningProcesses(std::vector<AppExecFwk::RunningProcessInfo>& allAppProcessInfos);
+
+    /**
+     * @brief Get the App Running State By Bundle Name object.
+     */
+    bool GetAppRunningStateByBundleName(const std::string &bundleName, bool& isRunning);
+
+    /**
+     * @brief Subscribe AppStateObserver.
+     *
+     * @param observer app state observer.
+     * @return true if subscribe successfully.
+     */
+    bool SubscribeObserver(const sptr<AppExecFwk::IApplicationStateObserver> &observer);
+
+    /**
+     * @brief Unubscribe AppStateObserver.
+     *
+     * @param observer app state observer.
+     * @return true if unsubscribe successfully.
+     */
+    bool UnsubscribeObserver(const sptr<AppExecFwk::IApplicationStateObserver> &observer);
+
 private:
     bool Connect();
 

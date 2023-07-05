@@ -89,7 +89,7 @@ ErrCode SleepState::BeginState()
         return ERR_STATE_MANAGER_IS_NULLPTR;
     }
     isRepeatedDetection_ = false;
-    int64_t maintIntervalTimeOut = TimeConstant::MSEC_PER_SEC * maintInterval_[maintIntervalIndex_];
+    int64_t maintIntervalTimeOut = 0;
     if (stateManagerPtr->GetPreState() == StandbyState::MAINTENANCE) {
         maintIntervalTimeOut = CalculateMaintTimeOut(stateManagerPtr, false);
         if (maintIntervalTimeOut != 0) {

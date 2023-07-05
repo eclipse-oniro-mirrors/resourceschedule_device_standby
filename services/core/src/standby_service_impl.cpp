@@ -129,6 +129,35 @@ ErrCode StandbyServiceImpl::RegisterCommEventObserver()
     return ERR_OK;
 }
 
+ErrCode StandbyServiceImpl::RegisterAppStateObserver()
+{
+    std::lock_guard<std::mutex> lock(appStateObserverMutex_);
+    if (appStateObserver_) {
+        return ERR_STANDBY_OBSERVER_ALREADY_EXIST;
+    }
+    appStateObserver_ = new (std::nothrow) AppStateObserver(handler_);
+    if (!appStateObserver_) {
+        STANDBYSERVICE_LOGE("malloc appStateObserver_ failed");
+        return ERR_STANDBY_OBSERVER_INIT_FAILED;
+    }
+    if (AppMgrHelper::GetInstance()->SubscribeObserver(appStateObserver_) != ERR_OK) {
+        STANDBYSERVICE_LOGE("subscribe appStateObserver_ failed");
+        return ERR_STANDBY_OBSERVER_INIT_FAILED;
+    }
+    return ERR_STANDBY_OBSERVER_ALREADY_EXIST;
+}
+
+ErrCode StandbyServiceImpl::UnregisterAppStateObserver()
+{
+    STANDBYSERVICE_LOGI("unregister app state observer");
+    std::lock_guard<std::mutex> lock(appStateObserverMutex_);
+    if (appStateObserver_) {
+        AppMgrHelper::GetInstance()->UnsubscribeObserver(appStateObserver_);
+        appStateObserver_ = nullptr;
+    }
+    return ERR_OK;
+}
+
 void StandbyServiceImpl::DayNightSwitchCallback()
 {
     handler_->PostTask([standbyImpl = shared_from_this()]() {
@@ -911,20 +940,20 @@ void StandbyServiceImpl::DumpModifyAllowList(const std::vector<std::string>& arg
     int32_t uid = std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str());
     std::string name = argsInStr[DUMP_FOURTH_PARAM];
     if (argsInStr[DUMP_SECOND_PARAM] == "--apply") {
-        uint32_t allowType = std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str());
+        uint32_t allowType = static_cast<uint32_t>(std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str()));
         int32_t duration = std::atoi(argsInStr[DUMP_SIXTH_PARAM].c_str());
         sptr<ResourceRequest> resourceRequest = new (std::nothrow) ResourceRequest(allowType,
             uid, name, duration, "dump", std::atoi(argsInStr[DUMP_SEVENTH_PARAM].c_str()));
         ApplyAllowResource(resourceRequest);
         result += "add one object to allow list\n";
     } else if (argsInStr[DUMP_SECOND_PARAM] == "--unapply") {
-        uint32_t allowType = std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str());
+        uint32_t allowType = static_cast<uint32_t>(std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str()));
         sptr<ResourceRequest> resourceRequest = new (std::nothrow) ResourceRequest(allowType,
             uid, name, 0, "dump", std::atoi(argsInStr[DUMP_SEVENTH_PARAM].c_str()));
         UnapplyAllowResource(resourceRequest);
         result += "remove one object to allow list\n";
     } else if (argsInStr[DUMP_SECOND_PARAM] == "--get") {
-        uint32_t allowType = std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str());
+        uint32_t allowType = static_cast<uint32_t>(std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str()));
         bool isApp = (std::atoi(argsInStr[DUMP_FOURTH_PARAM].c_str()) == 0);
         std::vector<AllowInfo> allowInfoList;
         GetAllowListInner(allowType, allowInfoList, isApp);

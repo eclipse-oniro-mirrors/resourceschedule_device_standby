@@ -42,6 +42,7 @@
 #include "single_instance.h"
 
 #include "app_mgr_client.h"
+#include "app_state_observer.h"
 #include "app_mgr_helper.h"
 #include "common_event_observer.h"
 
@@ -127,15 +128,16 @@ private:
     void DumpChangeConfigParam(const std::vector<std::string>& argsInStr, std::string& result);
 private:
     std::atomic<bool> isServiceReady_ {false};
-
+    sptr<AppStateObserver> appStateObserver_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ {nullptr};
+    std::mutex appStateObserverMutex_ {};
     std::mutex eventObserverMutex_ {};
     std::recursive_mutex timerObserverMutex_ {};
     std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_ {nullptr};
     std::shared_ptr<CommonEventObserver> commonEventObserver_ {nullptr};
     uint64_t dayNightSwitchTimerId_ {0};
     std::unordered_map<std::string, std::shared_ptr<AllowRecord>> allowInfoMap_ {};
-
+    bool ready_ = false;
     void* registerPlugin_ {nullptr};
     std::shared_ptr<IConstraintManagerAdapter> constraintManager_ {nullptr};
     std::shared_ptr<IListenerManagerAdapter> listenerManager_ {nullptr};

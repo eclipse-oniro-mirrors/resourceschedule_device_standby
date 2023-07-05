@@ -36,7 +36,9 @@ const uint32_t TIMER_SERVICE_READY = 2;
 const uint32_t ABILITY_SERVICE_READY = 4;
 const uint32_t BUNDLE_MGR_READY = 8;
 const uint32_t POWER_SERVICE_READY = 16;
-const uint32_t ALL_DEPENDS_READY = 31;
+const uint32_t APP_MGR_SERVICE_READY = 32;
+const uint32_t MULTIMODAL_INPUT_SERVICE_READY = 64;
+const uint32_t ALL_DEPENDS_READY = 127;
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(
     StandbyService::GetInstance().get());
 const bool SOFTWARE_SLEEP = system::GetBoolParameter("persist.sys.standby_switch", true);
@@ -69,6 +71,8 @@ void StandbyService::OnStart()
     AddSystemAbilityListener(ABILITY_MGR_SERVICE_ID);
     AddSystemAbilityListener(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     AddSystemAbilityListener(POWER_MANAGER_SERVICE_ID);
+    AddSystemAbilityListener(APP_MGR_SERVICE_ID);
+    AddSystemAbilityListener(MULTIMODAL_INPUT_SERVICE_ID);
     if (!Publish(StandbyService::GetInstance().get())) {
         STANDBYSERVICE_LOGE("standby service start failed!");
         return;
@@ -102,6 +106,15 @@ void StandbyService::OnAddSystemAbility(int32_t systemAbilityId, const std::stri
         case POWER_MANAGER_SERVICE_ID:
             STANDBYSERVICE_LOGI("power service is ready!");
             dependsReady_ |= POWER_SERVICE_READY;
+            break;
+        case APP_MGR_SERVICE_ID:
+            STANDBYSERVICE_LOGI("app mgr service is ready!");
+            dependsReady_ |= APP_MGR_SERVICE_READY;
+            StandbyServiceImpl::GetInstance()->RegisterAppStateObserver();
+            break;
+        case MULTIMODAL_INPUT_SERVICE_ID:
+            STANDBYSERVICE_LOGI("multi modal input service is ready!");
+            dependsReady_ |= MULTIMODAL_INPUT_SERVICE_READY;
             break;
         default:
             break;
@@ -138,6 +151,15 @@ void StandbyService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::s
         case POWER_MANAGER_SERVICE_ID:
             STANDBYSERVICE_LOGI("power service is removed!");
             dependsReady_ &= (~POWER_SERVICE_READY);
+            break;
+        case APP_MGR_SERVICE_ID:
+            STANDBYSERVICE_LOGI("app mgr service is removed!");
+            dependsReady_ &= (~APP_MGR_SERVICE_READY);
+            StandbyServiceImpl::GetInstance()->UnregisterAppStateObserver();
+            break;
+        case MULTIMODAL_INPUT_SERVICE_ID:
+            STANDBYSERVICE_LOGI("multi modal input service  is removed!");
+            dependsReady_ &= (~MULTIMODAL_INPUT_SERVICE_READY);
             break;
         default:
             break;

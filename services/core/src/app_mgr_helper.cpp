@@ -39,6 +39,40 @@ bool WEAK_FUNC AppMgrHelper::GetAllRunningProcesses(std::vector<AppExecFwk::Runn
     return true;
 }
 
+bool WEAK_FUNC AppMgrHelper::GetAppRunningStateByBundleName(const std::string &bundleName, bool& isRunning)
+{
+    std::lock_guard<std::mutex> lock(connectMutex_);
+    if (!Connect()) {
+        return false;
+    }
+    isRunning = appMgrProxy_->GetAppRunningStateByBundleName(bundleName);
+    return true;
+}
+
+bool WEAK_FUNC AppMgrHelper::SubscribeObserver(const sptr<AppExecFwk::IApplicationStateObserver> &observer)
+{
+    std::lock_guard<std::mutex> lock(connectMutex_);
+    if (!Connect()) {
+        return false;
+    }
+    if (appMgrProxy_->RegisterApplicationStateObserver(observer) != ERR_OK) {
+        return false;
+    }
+    return true;
+}
+
+bool WEAK_FUNC AppMgrHelper::UnsubscribeObserver(const sptr<AppExecFwk::IApplicationStateObserver> &observer)
+{
+    std::lock_guard<std::mutex> lock(connectMutex_);
+    if (!Connect()) {
+        return false;
+    }
+    if (appMgrProxy_->UnregisterApplicationStateObserver(observer) != ERR_OK) {
+        return false;
+    }
+    return true;
+}
+
 bool WEAK_FUNC AppMgrHelper::Connect()
 {
     if (appMgrProxy_ != nullptr) {
