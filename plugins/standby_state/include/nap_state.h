@@ -28,6 +28,7 @@ public:
     ErrCode EndState() override;
     bool CheckTransitionValid(uint32_t nextState) override;
     void EndEvalCurrentState(bool evalResult) override;
+    void OnStateBlocked() override;
 protected:
     bool IsInFinalPhase() override;
 private:

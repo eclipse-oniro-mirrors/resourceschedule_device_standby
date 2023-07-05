@@ -70,7 +70,7 @@ void DarkState::EndEvalCurrentState(bool evalResult)
         STANDBYSERVICE_LOGD("constraint evalution failed, block current state");
         stateManagerPtr->BlockCurrentState();
     } else {
-        stateManagerPtr->NextStateImpl(StandbyState::NAP);
+        stateManagerPtr->TransitToStateInner(StandbyState::NAP);
     }
 }
 }  // namespace DevStandbyMgr

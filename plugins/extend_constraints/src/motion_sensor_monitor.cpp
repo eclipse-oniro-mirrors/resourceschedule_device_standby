@@ -159,7 +159,8 @@ void MotionSensorMonitor::StopMotionDetection()
 void MotionSensorMonitor::PeriodlyStartMotionDetection()
 {
     if (StartMonitoringInner() != ERR_OK) {
-        StandbyServiceImpl::GetInstance()->GetStateManager()->EndEvalCurrentState(false);
+        // once constraint blocked, nap state start open maintenance state
+        StandbyServiceImpl::GetInstance()->GetStateManager()->BlockCurrentState();
         return;
     }
     StopMotionDetection();

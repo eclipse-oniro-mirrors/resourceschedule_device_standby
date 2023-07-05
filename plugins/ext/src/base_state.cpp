@@ -29,22 +29,18 @@
 using namespace OHOS::MiscServices;
 namespace OHOS {
 namespace DevStandbyMgr {
-namespace {
-    constexpr uint32_t MAX_RETRY_ENTER_STANDBY_TIMES = 3;
-}
 
-std::shared_ptr<PowerMgr::RunningLock> BaseState::stateRunningLock_ = nullptr;
-std::shared_ptr<PowerMgr::RunningLock> BaseState::phaseRunningLock_ = nullptr;
+std::shared_ptr<PowerMgr::RunningLock> BaseState::standbyRunningLock_ = nullptr;
+bool BaseState::runningLockStatus_ = false;
 
 ErrCode BaseState::Init()
 {
-    auto callbackTask = [this]() { this->TryToTransitNextState(); };
-    enterStandbyTimerId_ = TimedTask::CreateTimer(true, RETRY_INTERVAL, true, callbackTask);
+    auto callbackTask = [this]() { this->StartTransitNextState(); };
+    enterStandbyTimerId_ = TimedTask::CreateTimer(false, 0, true, callbackTask);
     if (enterStandbyTimerId_ == 0) {
         STANDBYSERVICE_LOGE("%{public}s state init failed", STATE_NAME_LIST[GetCurState()].c_str());
         return ERR_STANDBY_STATE_INIT_FAILED;
     }
-    SetTimedTask(TRANSIT_NEXT_STATE_TIMED_TASK, enterStandbyTimerId_);
     return ERR_OK;
 }
 
@@ -65,31 +61,26 @@ uint32_t BaseState::GetCurInnerPhase()
     return curPhase_;
 }
 
-void BaseState::TryToTransitNextState()
+void BaseState::StartTransitNextState()
 {
-    BaseState::GetStateRunningLock()->Lock();
     handler_->PostTask([this]() {
         STANDBYSERVICE_LOGD("due to timeout, try to enter %{public}s state from %{public}s",
             STATE_NAME_LIST[nextState_].c_str(), STATE_NAME_LIST[curState_].c_str());
+        BaseState::AcquireStandbyRunningLock();
         auto stateManagerPtr = stateManager_.lock();
         if (!stateManagerPtr) {
             STANDBYSERVICE_LOGW("state manager is nullptr, can not transit to next state");
+            BaseState::ReleaseStandbyRunningLock();
             return;
         }
         if (stateManagerPtr->IsEvalution()) {
-            STANDBYSERVICE_LOGW("state is in evalution, postpone to enter next state");
-            retryTimes_ += 1;
-            if (retryTimes_ >= MAX_RETRY_ENTER_STANDBY_TIMES) {
-                StopTimedTask(TRANSIT_NEXT_STATE_TIMED_TASK);
-            }
-            BaseState::GetStateRunningLock()->UnLock();
-        } else {
-            retryTimes_ = 0;
-            if (stateManagerPtr->TransitToState(nextState_) != ERR_OK) {
-                STANDBYSERVICE_LOGW("can not transit to state %{public}d, block current state", nextState_);
-                stateManagerPtr->BlockCurrentState();
-            }
-            StopTimedTask(TRANSIT_NEXT_STATE_TIMED_TASK);
+            STANDBYSERVICE_LOGW("state is in evalution, stop evalution and enter next state");
+            stateManagerPtr->StopEvalution();
+        }
+        if (stateManagerPtr->TransitToState(nextState_) != ERR_OK) {
+            STANDBYSERVICE_LOGW("can not transit to state %{public}d, block current state", nextState_);
+            stateManagerPtr->BlockCurrentState();
+            BaseState::ReleaseStandbyRunningLock();
         }
         }, TRANSIT_NEXT_STATE_TIMED_TASK);
 }
@@ -100,7 +91,7 @@ void BaseState::TransitToPhase(uint32_t curPhase, uint32_t nextPhase)
     stateManager_.lock()->StartEvalCurrentState(params);
 }
 
-void BaseState::NextPhaseImpl(uint32_t prePhase, uint32_t curPhase)
+void BaseState::TransitToPhaseInner(uint32_t prePhase, uint32_t curPhase)
 {
     auto stateManagerPtr = stateManager_.lock();
     if (!stateManagerPtr) {
@@ -122,6 +113,9 @@ bool BaseState::IsInFinalPhase()
     return true;
 }
 
+void BaseState::OnStateBlocked()
+{}
+
 void BaseState::SetTimedTask(const std::string& timedTaskName, uint64_t timedTaskId)
 {
     if (auto iter = timedTaskMap_.find(timedTaskName); iter == timedTaskMap_.end()) {
@@ -139,22 +133,14 @@ ErrCode BaseState::StartStateTransitionTimer(int64_t triggerTime)
         STANDBYSERVICE_LOGE("%{public}s state set timed task failed", STATE_NAME_LIST[nextState_].c_str());
         return ERR_STANDBY_TIMER_SERVICE_ERROR;
     }
+    SetTimedTask(TRANSIT_NEXT_STATE_TIMED_TASK, enterStandbyTimerId_);
     return ERR_OK;
-}
-
-uint64_t BaseState::GetTimedTask(const std::string& timedTaskName)
-{
-    if (auto iter = timedTaskMap_.find(timedTaskName); iter == timedTaskMap_.end()) {
-        return 0;
-    } else {
-        return iter->second;
-    }
 }
 
 ErrCode BaseState::StopTimedTask(const std::string& timedTaskName)
 {
     if (auto iter = timedTaskMap_.find(timedTaskName); iter == timedTaskMap_.end()) {
-        STANDBYSERVICE_LOGD("timedTask %{public}s not exist", timedTaskName.c_str());
+        STANDBYSERVICE_LOGW("timedTask %{public}s not exist", timedTaskName.c_str());
         return ERR_STANDBY_TIMERID_NOT_EXIST;
     } else if (iter->second > 0) {
         MiscServices::TimeServiceClient::GetInstance()->StopTimer(iter->second);
@@ -177,20 +163,29 @@ void BaseState::DestroyAllTimedTask()
 
 void BaseState::InitRunningLock()
 {
-    stateRunningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("StandbyStateRunningLock",
-        PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
-    phaseRunningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("StandbyPhaseRunningLock",
+    runningLockStatus_ = false;
+    standbyRunningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("StandbyRunningLock",
         PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
 }
 
-std::shared_ptr<PowerMgr::RunningLock>& BaseState::GetStateRunningLock()
+void BaseState::AcquireStandbyRunningLock()
 {
-    return stateRunningLock_;
+    if (runningLockStatus_) {
+        return;
+    }
+    standbyRunningLock_->Lock();
+    runningLockStatus_ = true;
+    STANDBYSERVICE_LOGD("acquire standby running lock, status is %{public}d", runningLockStatus_);
 }
 
-std::shared_ptr<PowerMgr::RunningLock>& BaseState::GetPhaseRunningLock()
+void BaseState::ReleaseStandbyRunningLock()
 {
-    return phaseRunningLock_;
+    if (!runningLockStatus_) {
+        return;
+    }
+    standbyRunningLock_->UnLock();
+    runningLockStatus_ = false;
+    STANDBYSERVICE_LOGD("release standby running lock, status is %{public}d", runningLockStatus_);
 }
 
 void BaseState::ShellDump(const std::vector<std::string>& argsInStr, std::string& result)

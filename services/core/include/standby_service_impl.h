@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
@@ -69,6 +70,7 @@ public:
     ErrCode UnapplyAllowResource(const sptr<ResourceRequest>& resourceRequest);
     ErrCode GetAllowList(uint32_t allowType, std::vector<AllowInfo>& allowInfoList,
         uint32_t reasonCode);
+    ErrCode GetEligiableRestrictSet(const std::string& strategyName, std::set<std::string>& restrictSet);
     ErrCode IsDeviceInStandby(bool& isStandby);
 
     void RegisterPluginInner(IConstraintManagerAdapter* constraintManager,
@@ -87,7 +89,6 @@ public:
     void ShellDump(const std::vector<std::string>& argsInStr, std::string& result);
     void GetAllowListInner(uint32_t allowType, std::vector<AllowInfo>& allowInfoList,
         uint32_t reasonCode);
-
     void DispatchEvent(const StandbyMessage& message);
 private:
     void ApplyAllowResInner(const sptr<ResourceRequest>& resourceRequest, int32_t pid);

@@ -18,11 +18,11 @@ namespace OHOS {
 namespace DevStandbyMgr {
 
 const std::string TRANSIT_NEXT_STATE_TIMED_TASK = "TransitNextStateTimedTask";
+const std::string TRANSIT_NEXT_STATE_CONDITION_TASK = "TransitNextStateConditionTask";
 const std::string TRANSIT_NEXT_PHASE_INSTANT_TASK = "TransitNextPhaseInstantTask";
 const std::string REPEATED_MOTION_DETECTION_TASK = "MotionDetectionPeriodlyTask";
 
 const std::string DEFAULT_PLUGIN_NAME = "libstandby_plugin.z.so";
-const int32_t RETRY_INTERVAL = 10 * 1000;
 const int32_t REPEATED_MOTION_DETECTION_INTERVAL = 10 * 60 * 1000;
 const std::string DARK_TIMEOUT = "dark_timeout";
 const std::string NAP_TIMEOUT = "nap_timeout";
@@ -50,6 +50,7 @@ const int32_t PERIODLY_TASK_TOTAL_TIMEOUT = 220;
 
 const int64_t SENSOR_SAMPLING_RATE = 200000000LL; // 200ms
 const int64_t SENSOR_REPORTING_RATE = 0LL;
+const int64_t HALF_HOUR = 1800 * 1000;
 
 const std::string PREVIOUS_STATE = "previous_state";
 const std::string CURRENT_STATE = "current_state";
@@ -58,7 +59,7 @@ const std::string CURRENT_PHASE = "current_phase";
 const std::string SENSOR_DETECTION = "sensor_detection";
 
 const std::string RES_CTRL_CONDITION = "res_ctrl_condition";
-
+const std::string SCR_OFF_HALF_HOUR_STATUS = "scr_off_half_hour_status";
 const uint32_t NO_DUMP_PARAM_NUMS = 0;
 const uint32_t DUMP_SLEEP_SWITCH_PARAM_NUMS = 3;
 const uint32_t DUMP_SLEEP_ENTER_STATE_NUMS = 3;

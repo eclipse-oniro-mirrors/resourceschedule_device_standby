@@ -33,7 +33,7 @@ public:
      * @brief Called back when the standby state changed.
      *
      * @param napped The device is in the nap mode.
-     * @param sleeping The device is in the sleeping mode.
+     * @param sleeping The device is in the sleep mode.
      */
     virtual void OnDeviceIdleMode(bool napped, bool sleeping) = 0;
 

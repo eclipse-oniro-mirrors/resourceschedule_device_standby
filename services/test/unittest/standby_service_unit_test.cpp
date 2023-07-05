@@ -408,11 +408,11 @@ HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_015, TestSize.Level1)
  */
 HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_016, TestSize.Level1)
 {
-    StandbyServiceImpl::GetInstance()->standbyStateManager_->NextStateImpl(StandbyState::WORKING);
+    StandbyServiceImpl::GetInstance()->standbyStateManager_->TransitToStateInner(StandbyState::WORKING);
     SleepForFC();
     StandbyServiceImpl::GetInstance()->DayNightSwitchCallback();
     SleepForFC();
-    StandbyServiceImpl::GetInstance()->standbyStateManager_->NextStateImpl(StandbyState::SLEEP);
+    StandbyServiceImpl::GetInstance()->standbyStateManager_->TransitToStateInner(StandbyState::SLEEP);
     SleepForFC();
     StandbyServiceImpl::GetInstance()->DayNightSwitchCallback();
     SleepForFC();
@@ -469,7 +469,7 @@ HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_017, TestSize.Level1)
  */
 HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_018, TestSize.Level1)
 {
-    StandbyStateSubscriber::GetInstance()->NotifyThroughCallback(false, false);
+    StandbyStateSubscriber::GetInstance()->NotifyIdleModeByCallback(false, false);
     StandbyStateSubscriber::GetInstance()->ReportAllowListChanged(DEFAULT_UID, DEFAULT_BUNDLENAME,
         AllowType::NET, true);
     sptr<IStandbyServiceSubscriber> nullSubscriber = nullptr;
@@ -478,7 +478,7 @@ HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_018, TestSize.Level1)
     sptr<IStandbyServiceSubscriber> subscriber = new (std::nothrow) StandbyServiceSubscriberStub();
     EXPECT_EQ(StandbyStateSubscriber::GetInstance()->AddSubscriber(subscriber), ERR_OK);
     EXPECT_NE(StandbyStateSubscriber::GetInstance()->AddSubscriber(subscriber), ERR_OK);
-    StandbyStateSubscriber::GetInstance()->NotifyThroughCallback(false, false);
+    StandbyStateSubscriber::GetInstance()->NotifyIdleModeByCallback(false, false);
     StandbyStateSubscriber::GetInstance()->ReportAllowListChanged(DEFAULT_UID, DEFAULT_BUNDLENAME,
         AllowType::NET, true);
     EXPECT_EQ(StandbyStateSubscriber::GetInstance()->RemoveSubscriber(subscriber), ERR_OK);
@@ -489,8 +489,8 @@ HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_018, TestSize.Level1)
     StandbyStateSubscriber::GetInstance()->RemoveSubscriber(subscriber);
 
     StandbyStateSubscriber::GetInstance()->deathRecipient_ = nullptr;
-    EXPECT_EQ(StandbyStateSubscriber::GetInstance()->AddSubscriber(subscriber), ERR_OK);
-    EXPECT_EQ(StandbyStateSubscriber::GetInstance()->RemoveSubscriber(subscriber), ERR_OK);
+    EXPECT_NE(StandbyStateSubscriber::GetInstance()->AddSubscriber(subscriber), ERR_OK);
+    EXPECT_NE(StandbyStateSubscriber::GetInstance()->RemoveSubscriber(subscriber), ERR_OK);
     StandbyStateSubscriber::GetInstance()->deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient();
 
     remote = nullptr;

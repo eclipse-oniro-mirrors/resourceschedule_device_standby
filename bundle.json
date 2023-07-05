@@ -12,29 +12,24 @@
   "component": {
     "name": "device_standby",
     "subsystem": "resourceschedule",
-    "syscap": [],
+    "syscap": [
+    ],
     "features": [],
     "adapted_system_type": [
-      "mini",
-      "small",
       "standard"
     ],
     "rom": "2048KB",
     "ram": "10240KB",
     "deps": {
       "components": [
-        "safwk",
         "eventhandler",
         "ipc",
-        "libxml2",
         "c_utils",
         "config_policy",
-        "hitrace_native",
         "hilog_native",
         "samgr"
       ],
       "third_party": [
-        "xml2",
         "googletest"
       ]
     },

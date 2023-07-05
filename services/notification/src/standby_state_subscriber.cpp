@@ -48,12 +48,11 @@ ErrCode StandbyStateSubscriber::AddSubscriber(const sptr<IStandbyServiceSubscrib
         STANDBYSERVICE_LOGE("remote in subscriber is null");
         return ERR_STANDBY_INVALID_PARAM;
     }
-
+    std::lock_guard<std::mutex> subcriberLock(subscriberLock_);
     if (deathRecipient_ == nullptr) {
         STANDBYSERVICE_LOGW("create death recipient failed");
-        deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient();
+        return ERR_STANDBY_INVALID_PARAM;
     }
-    std::lock_guard<std::mutex> subcriberLock(subscriberLock_);
     auto subscriberIter = FindSubcriberObject(remote);
     if (subscriberIter != subscriberList_.end()) {
         STANDBYSERVICE_LOGE("subscriber has already exist");
@@ -69,10 +68,6 @@ ErrCode StandbyStateSubscriber::AddSubscriber(const sptr<IStandbyServiceSubscrib
 
 ErrCode StandbyStateSubscriber::RemoveSubscriber(const sptr<IStandbyServiceSubscriber>& subscriber)
 {
-    if (deathRecipient_ == nullptr) {
-        STANDBYSERVICE_LOGW("deathRecipient is null");
-        deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient();
-    }
     if (subscriber == nullptr) {
         STANDBYSERVICE_LOGE("subscriber is null");
         return ERR_STANDBY_INVALID_PARAM;
@@ -83,6 +78,10 @@ ErrCode StandbyStateSubscriber::RemoveSubscriber(const sptr<IStandbyServiceSubsc
         return ERR_STANDBY_INVALID_PARAM;
     }
     std::lock_guard<std::mutex> subcriberLock(subscriberLock_);
+    if (deathRecipient_ == nullptr) {
+        STANDBYSERVICE_LOGW("deathRecipient is null");
+        return ERR_STANDBY_OBJECT_EXISTS;
+    }
     auto subscriberIter = FindSubcriberObject(remote);
     if (subscriberIter == subscriberList_.end()) {
         STANDBYSERVICE_LOGE("request subscriber is not exists");
@@ -98,13 +97,13 @@ void StandbyStateSubscriber::ReportStandbyState(uint32_t curState)
 {
     bool napped = curState == StandbyState::NAP;
     bool sleeping = curState == StandbyState::SLEEP;
-    NotifyThroughCommonEvent(napped, sleeping);
-    NotifyThroughCallback(napped, sleeping);
+    STANDBYSERVICE_LOGI("start ReportStandbyState, napping is %{public}d, sleeping is %{public}d", napped, sleeping);
+    NotifyIdleModeByCallback(napped, sleeping);
+    NotifyIdleModeByCommonEvent(napped, sleeping);
 }
 
-void StandbyStateSubscriber::NotifyThroughCallback(bool napped, bool sleeping)
+void StandbyStateSubscriber::NotifyIdleModeByCallback(bool napped, bool sleeping)
 {
-    STANDBYSERVICE_LOGI("start ReportStandbyState, napping is %{public}d, sleeping is %{public}d", napped, sleeping);
     std::lock_guard<std::mutex> subcriberLock(subscriberLock_);
     if (subscriberList_.empty()) {
         STANDBYSERVICE_LOGW("Sleep Mode Subscriber List is empty");
@@ -116,7 +115,7 @@ void StandbyStateSubscriber::NotifyThroughCallback(bool napped, bool sleeping)
     STANDBYSERVICE_LOGD("stop callback subscriber list");
 }
 
-void StandbyStateSubscriber::NotifyThroughCommonEvent(bool napped, bool sleeping)
+void StandbyStateSubscriber::NotifyIdleModeByCommonEvent(bool napped, bool sleeping)
 {
     AAFwk::Want want;
     want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DEVICE_IDLE_MODE_CHANGED);
@@ -125,9 +124,9 @@ void StandbyStateSubscriber::NotifyThroughCommonEvent(bool napped, bool sleeping
     EventFwk::CommonEventData commonEventData;
     commonEventData.SetWant(want);
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonEventData)) {
-        STANDBYSERVICE_LOGE("PublishCommonEvent for sleep mode finished failed");
+        STANDBYSERVICE_LOGE("PublishCommonEvent for idle mode finished failed");
     } else {
-        STANDBYSERVICE_LOGD("PublishCommonEvent for sleep mode finished succeed");
+        STANDBYSERVICE_LOGD("PublishCommonEvent for idle mode finished succeed");
     }
 }
 
@@ -136,6 +135,13 @@ void StandbyStateSubscriber::ReportAllowListChanged(int32_t uid, const std::stri
 {
     STANDBYSERVICE_LOGI("start ReportAllowListChanged, uid is %{public}d"\
         ", name is %{public}s, allowType is %{public}d", uid, name.c_str(), allowType);
+    NotifyAllowChangedByCallback(uid, name, allowType, added);
+    NotifyAllowChangedByCommonEvent(uid, name, allowType, added);
+}
+
+void StandbyStateSubscriber::NotifyAllowChangedByCallback(int32_t uid, const std::string& name,
+    uint32_t allowType, bool added)
+{
     std::lock_guard<std::mutex> subcriberLock(subscriberLock_);
     if (subscriberList_.empty()) {
         STANDBYSERVICE_LOGW("Sleep State Subscriber List is empty");
@@ -143,6 +149,25 @@ void StandbyStateSubscriber::ReportAllowListChanged(int32_t uid, const std::stri
     }
     for (auto iter = subscriberList_.begin(); iter != subscriberList_.end(); ++iter) {
         (*iter)->OnAllowListChanged(uid, name, allowType, added);
+    }
+}
+
+void StandbyStateSubscriber::NotifyAllowChangedByCommonEvent(int32_t uid, const std::string& name,
+    uint32_t allowType, bool added)
+{
+    AAFwk::Want want;
+    // todo COMMON_EVENT_DEVICE_IDLE_MODE_CHANGED --> COMMON_EVENT_DEVICE_IDLE_EXEMPTION_LIST_UPDATED
+    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DEVICE_IDLE_MODE_CHANGED);
+    want.SetParam("uid", uid);
+    want.SetParam("name", name);
+    want.SetParam("resourceType", static_cast<int32_t>(allowType));
+    want.SetParam("added", added);
+    EventFwk::CommonEventData commonEventData;
+    commonEventData.SetWant(want);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonEventData)) {
+        STANDBYSERVICE_LOGE("PublishCommonEvent for exempt list update failed");
+    } else {
+        STANDBYSERVICE_LOGD("PublishCommonEvent for exempt list update succeed");
     }
 }
 

@@ -54,7 +54,7 @@ ErrCode StandbyServiceSubscriberStub::OnRemoteRequestInner(uint32_t code,
     }
 }
 
-void StandbyServiceSubscriberStub::OnDeviceIdleMode(bool napped, bool sleeping)
+void StandbyServiceSubscriberStub::OnDeviceIdleMode(bool napped, bool sleeped)
 {}
 
 void StandbyServiceSubscriberStub::OnAllowListChanged(int32_t uid, const std::string& name, uint32_t allowType,
@@ -64,12 +64,12 @@ void StandbyServiceSubscriberStub::OnAllowListChanged(int32_t uid, const std::st
 ErrCode StandbyServiceSubscriberStub::HandleOnDeviceIdleMode(MessageParcel& data)
 {
     bool napped {false};
-    bool sleeping {false};
-    if (!data.ReadBool(napped) || !data.ReadBool(sleeping)) {
+    bool sleeped {false};
+    if (!data.ReadBool(napped) || !data.ReadBool(sleeped)) {
         STANDBYSERVICE_LOGW("HandleOnDeviceIdleMode Read parcel failed.");
         return ERR_INVALID_DATA;
     }
-    OnDeviceIdleMode(napped, sleeping);
+    OnDeviceIdleMode(napped, sleeped);
     return ERR_OK;
 }
 

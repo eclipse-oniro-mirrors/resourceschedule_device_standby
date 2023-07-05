@@ -26,7 +26,22 @@ namespace DevStandbyMgr {
 ErrCode WorkingState::BeginState()
 {
     curPhase_ = 0;
+    handler_->PostTask([working = shared_from_this()]() {
+        working->checkScreenStatus();
+        }, TRANSIT_NEXT_STATE_CONDITION_TASK);
     return ERR_OK;
+}
+
+// check screen status, if screen off, traisit to dark status
+void WorkingState::checkScreenStatus()
+{
+    auto stateManagerPtr = stateManager_.lock();
+    if (!stateManagerPtr) {
+        return;
+    }
+    if (!stateManagerPtr->IsScreenOn()) {
+        stateManagerPtr->TransitToState(StandbyState::DARK);
+    }
 }
 
 ErrCode WorkingState::Init()
@@ -45,6 +60,7 @@ ErrCode WorkingState::EndState()
         STANDBYSERVICE_LOGE("state manager adapter is nullptr");
         return ERR_STATE_MANAGER_IS_NULLPTR;
     }
+    handler_->RemoveTask(TRANSIT_NEXT_STATE_CONDITION_TASK);
     return ERR_OK;
 }
 
@@ -65,7 +81,7 @@ void WorkingState::EndEvalCurrentState(bool evalResult)
         return;
     }
     if (evalResult) {
-        stateManagerPtr->NextStateImpl(StandbyState::DARK);
+        stateManagerPtr->TransitToStateInner(StandbyState::DARK);
     } else {
         stateManagerPtr->BlockCurrentState();
     }

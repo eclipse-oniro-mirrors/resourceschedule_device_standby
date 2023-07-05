@@ -208,14 +208,14 @@ int32_t StandbyConfigManager::GetMaxDuration(const std::string& name, const std:
     }
 }
 
-template<typename T> std::vector<T> StandbyConfigManager::GetEligibleAllowConfig(const std::string& paramName,
-    uint32_t condition, bool isAllow, bool isApp, const std::function<void(bool, std::vector<T>&,
+template<typename T> std::set<T> StandbyConfigManager::GetEligibleAllowConfig(const std::string& paramName,
+    uint32_t condition, bool isAllow, bool isApp, const std::function<void(bool, std::set<T>&,
     const DefaultResourceConfig&)>& func)
 {
     if (defaultResourceConfigMap_.find(paramName) == defaultResourceConfigMap_.end()) {
         return {};
     }
-    std::vector<T> eligibleResCtrlConfig;
+    std::set<T> eligibleResCtrlConfig;
     const auto& resCtrlConfig = *(defaultResourceConfigMap_.find(paramName)->second);
     STANDBYSERVICE_LOGD("find duration from %{public}s, size is %{public}lu", paramName.c_str(), resCtrlConfig.size());
     for (const auto& config : resCtrlConfig) {
@@ -238,34 +238,30 @@ template<typename T> std::vector<T> StandbyConfigManager::GetEligibleAllowConfig
     return eligibleResCtrlConfig;
 }
 
-std::vector<TimeLtdProcess> StandbyConfigManager::GetEligibleAllowTimeConfig(const std::string& paramName,
+std::set<TimeLtdProcess> StandbyConfigManager::GetEligibleAllowTimeConfig(const std::string& paramName,
     uint32_t condition, bool isAllow, bool isApp)
 {
-    auto func = [](bool isApp, std::vector<TimeLtdProcess>& eligibleResCtrlConfig,
+    auto func = [](bool isApp, std::set<TimeLtdProcess>& eligibleResCtrlConfig,
         const DefaultResourceConfig& config) {
         if (isApp) {
-            eligibleResCtrlConfig.insert(eligibleResCtrlConfig.end(),
-                config.timeLtdApps_.begin(), config.timeLtdApps_.end());
+            eligibleResCtrlConfig.insert(config.timeLtdApps_.begin(), config.timeLtdApps_.end());
         } else {
-            eligibleResCtrlConfig.insert(eligibleResCtrlConfig.end(),
-                config.timeLtdProcesses_.begin(), config.timeLtdProcesses_.end());
+            eligibleResCtrlConfig.insert(config.timeLtdProcesses_.begin(), config.timeLtdProcesses_.end());
         }
         STANDBYSERVICE_LOGD("after calculate, eligible size is %{public}lu", eligibleResCtrlConfig.size());
     };
     return GetEligibleAllowConfig<TimeLtdProcess>(paramName, condition, isAllow, isApp, func);
 }
 
-std::vector<std::string> StandbyConfigManager::GetEligiblePersistAllowConfig(const std::string& paramName,
+std::set<std::string> StandbyConfigManager::GetEligiblePersistAllowConfig(const std::string& paramName,
     uint32_t condition, bool isAllow, bool isApp)
 {
-    auto func = [](bool isApp, std::vector<std::string>& eligibleResCtrlConfig,
+    auto func = [](bool isApp, std::set<std::string>& eligibleResCtrlConfig,
         const DefaultResourceConfig& config) {
         if (isApp) {
-            eligibleResCtrlConfig.insert(eligibleResCtrlConfig.end(),
-                config.apps_.begin(), config.apps_.end());
+            eligibleResCtrlConfig.insert(config.apps_.begin(), config.apps_.end());
         } else {
-            eligibleResCtrlConfig.insert(eligibleResCtrlConfig.end(),
-                config.processes_.begin(), config.processes_.end());
+            eligibleResCtrlConfig.insert(config.processes_.begin(), config.processes_.end());
         }
     };
     return GetEligibleAllowConfig<std::string>(paramName, condition, isAllow, isApp, func);

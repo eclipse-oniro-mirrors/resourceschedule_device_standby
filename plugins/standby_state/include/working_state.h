@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace DevStandbyMgr {
 class IStateManagerAdapter;
-class WorkingState : public BaseState {
+class WorkingState : public BaseState, public std::enable_shared_from_this<WorkingState> {
 using BaseState::BaseState;
 public:
     ErrCode Init() override;
@@ -29,6 +29,7 @@ public:
     ErrCode EndState() override;
     bool CheckTransitionValid(uint32_t nextState) override;
     void EndEvalCurrentState(bool evalResult) override;
+    void checkScreenStatus();
 };
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

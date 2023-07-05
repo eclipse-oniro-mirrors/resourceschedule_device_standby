@@ -34,20 +34,23 @@ public:
 
     void BlockCurrentState() override;
     void UnblockCurrentState() override;
+    void OnScreenOffHalfHour(bool scrOffHalfHourCtrl, bool repeated) override;
 
     ErrCode TransitToState(uint32_t nextState) override;
-    ErrCode NextStateImpl(uint32_t nextState) override;
+    ErrCode TransitToStateInner(uint32_t nextState) override;
+    void StopEvalution() override;
 
     void ShellDump(const std::vector<std::string>& argsInStr, std::string& result) override;
-
 private:
     void SendNotification(uint32_t preState, bool needDispatchEvent);
     bool CheckTransitionValid(uint32_t curState, uint32_t nextState);
     ErrCode ExitStandby(uint32_t nextState);
     ErrCode EnterStandby(uint32_t nextState);
     ErrCode TransitWithMaint(uint32_t nextState);
+    void OnScreenOffHalfHourInner(bool scrOffHalfHourCtrl, bool repeated);
 
     void HandleCommonEvent(const StandbyMessage& message);
+    void HandleScrOffHalfHour(const StandbyMessage& message);
     void DumpShowDetailInfo(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpEnterSpecifiedState(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result);

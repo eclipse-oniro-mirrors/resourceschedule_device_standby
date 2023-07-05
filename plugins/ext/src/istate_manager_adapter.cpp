@@ -33,5 +33,15 @@ bool IStateManagerAdapter::IsEvalution()
 {
     return isEvalution_;
 }
+
+int64_t IStateManagerAdapter::GetScreenOffTimeStamp()
+{
+    return screenOffTimeStamp_;
+}
+
+bool IStateManagerAdapter::IsScreenOn()
+{
+    return isScreenOn_;
+}
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

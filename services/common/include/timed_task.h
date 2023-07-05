@@ -45,8 +45,9 @@ public:
     void SetCallbackInfo(const std::function<void()>& callBack);
 
     static uint64_t CreateTimer(bool repeat, uint64_t interval, bool isExact, const std::function<void()>& callBack);
-    static bool StartTimer(uint64_t& timeId);
-    static bool RegisterTimer(uint64_t& timeId, bool repeat, uint64_t interval, const std::function<void()>& callBack);
+    static bool StartDayNightSwitchTimer(uint64_t& timeId);
+    static bool RegisterDayNightSwitchTimer(uint64_t& timeId, bool repeat, uint64_t interval,
+        const std::function<void()>& callBack);
 public:
     std::function<void()> callBack_ = nullptr;
 };

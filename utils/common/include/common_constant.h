@@ -22,13 +22,13 @@
 namespace OHOS {
 namespace DevStandbyMgr {
 extern const std::string TRANSIT_NEXT_STATE_TIMED_TASK;
+extern const std::string TRANSIT_NEXT_STATE_CONDITION_TASK;
 extern const std::string TRANSIT_NEXT_PHASE_INSTANT_TASK;
 extern const std::string REPEATED_MOTION_DETECTION_TASK;
 
 extern const std::string DEFAULT_PLUGIN_NAME;
 
 extern const std::string DETECT_MOTION_CONFIG;
-extern const int32_t RETRY_INTERVAL;
 extern const int32_t REPEATED_MOTION_DETECTION_INTERVAL;
 extern const std::string DARK_TIMEOUT;
 extern const std::string NAP_TIMEOUT;
@@ -50,6 +50,7 @@ extern const int32_t PERIODLY_TASK_REST_TIMEOUT;
 extern const int32_t PERIODLY_TASK_TOTAL_TIMEOUT;
 extern const int64_t SENSOR_SAMPLING_RATE;
 extern const int64_t SENSOR_REPORTING_RATE;
+extern const int64_t HALF_HOUR;
 
 extern const std::string NAP_SWITCH;
 extern const std::string SLEEP_SWITCH;
@@ -59,8 +60,8 @@ extern const std::string CURRENT_STATE;
 extern const std::string PREVIOUS_PHASE;
 extern const std::string CURRENT_PHASE;
 extern const std::string SENSOR_DETECTION;
-
 extern const std::string RES_CTRL_CONDITION;
+extern const std::string SCR_OFF_HALF_HOUR_STATUS;
 
 extern const uint32_t NO_DUMP_PARAM_NUMS;
 extern const uint32_t DUMP_SLEEP_SWITCH_PARAM_NUMS;

@@ -14,5 +14,6 @@
 group("standby_interfaces") {
   deps = [
     "innerkits:standby_innerkits",
+    "kits:devicestandby",
   ]
 }

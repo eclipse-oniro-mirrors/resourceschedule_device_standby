@@ -33,6 +33,7 @@ public:
     void ShellDump(const std::vector<std::string>& argsInStr, std::string& result) override;
 protected:
     bool IsInFinalPhase() override;
+    virtual void CheckScrenOffHalfHour();
 private:
     void StartPeriodlyMotionDetection();
     void TryToEnterNextPhase(const std::shared_ptr<IStateManagerAdapter>& stateManagerPtr,

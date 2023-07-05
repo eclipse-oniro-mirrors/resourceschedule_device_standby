@@ -50,6 +50,7 @@ namespace {
 const std::string ALLOW_RECORD_FILE_PATH = "/data/service/el1/public/device_standby/allow_record";
 const std::string STANDBY_MSG_HANDLER = "StandbyMsgHandler";
 const std::string ON_PLUGIN_REGISTER = "OnPluginRegister";
+const std::string STANDBY_PERMISSION = "ohos.permission.DEVICE_STANDBY_EXEMPT_LIST_UPDATED";
 }
 
 IMPLEMENT_SINGLE_INSTANCE(StandbyServiceImpl);
@@ -134,7 +135,6 @@ void StandbyServiceImpl::DayNightSwitchCallback()
     handler_->PostTask([standbyImpl = shared_from_this()]() {
         STANDBYSERVICE_LOGD("start day and night switch");
         auto curState = standbyImpl->standbyStateManager_->GetCurState();
-        standbyImpl->standbySubscriber_->ReportStandbyState(curState);
         if (curState == StandbyState::SLEEP) {
             StandbyMessage standbyMessage{StandbyMessageType::RES_CTRL_CONDITION_CHANGED};
             standbyMessage.want_ = AAFwk::Want{};
@@ -142,7 +142,7 @@ void StandbyServiceImpl::DayNightSwitchCallback()
             standbyMessage.want_->SetParam(RES_CTRL_CONDITION, static_cast<int32_t>(condition));
             standbyImpl->DispatchEvent(standbyMessage);
         }
-        if (!TimedTask::StartTimer(standbyImpl->dayNightSwitchTimerId_)) {
+        if (!TimedTask::StartDayNightSwitchTimer(standbyImpl->dayNightSwitchTimerId_)) {
             STANDBYSERVICE_LOGE("start day and night switch timer failed");
             standbyImpl->ResetTimeObserver();
         }
@@ -159,7 +159,7 @@ ErrCode StandbyServiceImpl::RegisterTimeObserver()
     auto callBack = [standbyImpl = shared_from_this()]() {
         standbyImpl->DayNightSwitchCallback();
     };
-    if (!TimedTask::RegisterTimer(dayNightSwitchTimerId_, false, 0, callBack)) {
+    if (!TimedTask::RegisterDayNightSwitchTimer(dayNightSwitchTimerId_, false, 0, callBack)) {
         STANDBYSERVICE_LOGE("RegisterTimer failed");
         return ERR_STANDBY_OBSERVER_INIT_FAILED;
     }
@@ -314,6 +314,9 @@ void StandbyServiceImpl::GetPidAndProcName(std::unordered_map<int32_t, std::stri
         return;
     }
     STANDBYSERVICE_LOGD("GetAllRunningProcesses result size is %{public}lu", allAppProcessInfos.size());
+    for (const auto& info : allAppProcessInfos) {
+        pidNameMap.emplace(info.pid_, info.processName_);
+    }
     std::list<SystemProcessInfo> systemProcessInfos {};
     if (!AbilityManagerHelper::GetInstance()->GetRunningSystemProcess(systemProcessInfos)) {
         STANDBYSERVICE_LOGE("connect to app ability service failed");
@@ -497,8 +500,9 @@ void StandbyServiceImpl::ApplyAllowResInner(const sptr<ResourceRequest>& resourc
     uint32_t preAllowType = 0;
     auto iter = allowInfoMap_.find(keyStr);
     if (iter == allowInfoMap_.end()) {
-        allowInfoMap_.emplace(keyStr, std::make_shared<AllowRecord>(uid, pid, name, 0));
-        iter = allowInfoMap_.find(keyStr);
+        std::tie(iter, std::ignore) =
+            allowInfoMap_.emplace(keyStr, std::make_shared<AllowRecord>(uid, pid, name, 0));
+        iter->second->reasonCode_ = resourceRequest->GetReasonCode();
     } else {
         preAllowType = iter->second->allowType_;
         iter->second->pid_ = pid;
@@ -513,7 +517,7 @@ void StandbyServiceImpl::ApplyAllowResInner(const sptr<ResourceRequest>& resourc
         NotifyAllowListChanged(uid, name, alowTypeDiff, true);
     }
     if (iter->second->allowType_ == 0) {
-        STANDBYSERVICE_LOGD("%{public}s does not have duration, delete record", keyStr.c_str());
+        STANDBYSERVICE_LOGD("%{public}s does not have valid record, delete record", keyStr.c_str());
         allowInfoMap_.erase(iter);
     }
     DumpPersistantData();
@@ -535,14 +539,19 @@ void StandbyServiceImpl::UpdateRecord(std::shared_ptr<AllowRecord>& allowRecord,
         if (allowNumber == 0) {
             continue;
         }
-        int64_t maxDuration = std::min(resourceRequest->GetDuration(), StandbyConfigManager::GetInstance()->
-            GetMaxDuration(name, AllowTypeName[allowTypeIndex], condition, isApp)) * TimeConstant::MSEC_PER_SEC;
-        STANDBYSERVICE_LOGD("name is %{public}s, condition is %{public}d, res is %{public}s, duration is %{public}ld",
-            name.c_str(), condition, AllowTypeName[allowTypeIndex].c_str(), maxDuration);
+        int64_t maxDuration = 0;
+        if (allowNumber != AllowType::WORK_SCHEDULER) {
+            maxDuration = std::min(resourceRequest->GetDuration(), StandbyConfigManager::GetInstance()->
+                GetMaxDuration(name, AllowTypeName[allowTypeIndex], condition, isApp)) * TimeConstant::MSEC_PER_SEC;
+            STANDBYSERVICE_LOGD("name: %{public}s, condition: %{public}d, res: %{public}s, duration: %{public}ld",
+                name.c_str(), condition, AllowTypeName[allowTypeIndex].c_str(), maxDuration);
+        } else {
+            maxDuration = resourceRequest->GetDuration() * TimeConstant::MSEC_PER_SEC;
+        }
         if (maxDuration <= 0) {
             continue;
         }
-        endTime = curTime +  maxDuration;
+        endTime = curTime + maxDuration;
         auto& allowTimeList = allowRecord->allowTimeList_;
         auto findRecordTask = [allowTypeIndex](const auto& it) { return it.allowTypeIndex_ == allowTypeIndex; };
         auto it = std::find_if(allowTimeList.begin(), allowTimeList.end(), findRecordTask);
@@ -661,6 +670,7 @@ ErrCode StandbyServiceImpl::GetAllowList(uint32_t allowType, std::vector<AllowIn
 void StandbyServiceImpl::GetAllowListInner(uint32_t allowType, std::vector<AllowInfo>& allowInfoList,
     uint32_t reasonCode)
 {
+    STANDBYSERVICE_LOGD("start GetAllowListInner, allowType is %{public}d", allowType);
     for (uint32_t allowTypeIndex = 0; allowTypeIndex < MAX_ALLOW_TYPE_NUM; ++allowTypeIndex) {
         uint32_t allowNumber = allowType & (1 << allowTypeIndex);
         if (allowNumber == 0) {
@@ -698,7 +708,7 @@ void StandbyServiceImpl::GetPersistAllowList(uint32_t allowTypeIndex, std::vecto
     bool isApp)
 {
     uint32_t condition = TimeProvider::GetCondition();
-    std::vector<std::string> psersistAllowList;
+    std::set<std::string> psersistAllowList;
     if (isApp) {
         psersistAllowList = StandbyConfigManager::GetInstance()->GetEligiblePersistAllowConfig(
             AllowTypeName[allowTypeIndex], condition, true, true);
@@ -721,6 +731,25 @@ ErrCode StandbyServiceImpl::IsDeviceInStandby(bool& isStandby)
         auto curState = standbyStateManager_->GetCurState();
         isStandby = (curState == StandbyState::SLEEP);
         }, AppExecFwk::EventQueue::Priority::HIGH);
+    return ERR_OK;
+}
+
+ErrCode StandbyServiceImpl::GetEligiableRestrictSet(const std::string& strategyName, std::set<std::string>& restrictSet)
+{
+    uint32_t condition = TimeProvider::GetCondition();
+    std::set<std::string> originRestrictSet =
+        StandbyConfigManager::GetInstance()->GetEligiblePersistAllowConfig(strategyName, condition, false, false);
+
+    std::vector<AllowInfo> allowInfoList;
+    GetAllowListInner(AllowType::FREEZE, allowInfoList, ReasonCodeEnum::REASON_NATIVE_API);
+    STANDBYSERVICE_LOGD("allowInfoList size is %{public}lu", allowInfoList.size());
+    std::set<std::string> allowSet;
+    for_each(allowInfoList.begin(), allowInfoList.end(),
+        [&allowSet](AllowInfo& allowInfo) { allowSet.insert(allowInfo.GetName()); });
+
+    std::set_difference(originRestrictSet.begin(), originRestrictSet.end(), allowSet.begin(),
+        allowSet.end(), std::inserter(restrictSet, restrictSet.begin()));
+    STANDBYSERVICE_LOGD("restrictSet size is %{public}lu", restrictSet.size());
     return ERR_OK;
 }
 
@@ -785,7 +814,7 @@ void StandbyServiceImpl::DumpUsage(std::string& result)
     "        --unapply {uid} {name} {type}                  delete the type of the uid from allow list\n"
     "        --get {type} {isApp}                                get allow list info\n"
     "    -S                                                 simulately activate the sensor:\n"
-    "        {--motion or --repeat}                         simulately activate the motion sensor\n";
+    "        {--motion or --repeat or --blocked or --halfhour} simulately activate the motion sensor\n";
 
     result.append(dumpHelpMsg);
 }
@@ -813,6 +842,7 @@ void StandbyServiceImpl::DumpAllowListInfo(std::string& result)
         stream << "\t\tname: " << iter->second->name_ << "\n";
         stream << "\t\tpid: " << iter->second->pid_ << "\n";
         stream << "\t\tallow type: " << iter->second->allowType_ << "\n";
+        stream << "\t\treason code: " << iter->second->reasonCode_ << "\n";
         int64_t curTime = MiscServices::TimeServiceClient::GetInstance()->GetMonotonicTimeMs();
         auto &allowTimeList = iter->second->allowTimeList_;
         for (auto unitIter = allowTimeList.begin();

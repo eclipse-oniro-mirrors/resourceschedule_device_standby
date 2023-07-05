@@ -62,8 +62,8 @@ ErrCode NapState::BeginState()
         GetStandbyParam(NAP_TIMEOUT), TimeProvider::GetNapTimeOut());
     STANDBYSERVICE_LOGD("napTimeOut is %{public}ld ms", napTimeOut);
     StartStateTransitionTimer(napTimeOut);
-    BaseState::GetPhaseRunningLock()->Lock();
     handler_->PostTask([napState = shared_from_this()]() {
+        BaseState::AcquireStandbyRunningLock();
         napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1);
         }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     return ERR_OK;
@@ -94,7 +94,7 @@ void NapState::EndEvalCurrentState(bool evalResult)
 void NapState::SetPhaseTransitTask(bool evalResult)
 {
     if (evalResult) {
-        NextPhaseImpl(curPhase_, curPhase_ + 1);
+        TransitToPhaseInner(curPhase_, curPhase_ + 1);
     }
     curPhase_ += 1;
     if (curPhase_ < NapStatePhase::END) {
@@ -102,7 +102,7 @@ void NapState::SetPhaseTransitTask(bool evalResult)
             napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1);
             }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     } else {
-        BaseState::GetPhaseRunningLock()->UnLock();
+        BaseState::ReleaseStandbyRunningLock();
     }
 }
 
@@ -110,21 +110,28 @@ void NapState::HandleEvalResToSleepState(bool evalResult)
 {
     auto stateManagerPtr = stateManager_.lock();
     if (!stateManagerPtr) {
-        BaseState::GetStateRunningLock()->UnLock();
         return;
     }
     if (evalResult) {
-        stateManagerPtr->NextStateImpl(StandbyState::SLEEP);
+        stateManagerPtr->TransitToStateInner(StandbyState::SLEEP);
     } else {
-        STANDBYSERVICE_LOGD("constraint evalution failed, block current state");
-        stateManagerPtr->BlockCurrentState();
-        int64_t maintIntervalTimeOut = CalculateMaintTimeOut(stateManagerPtr, true);
-        if (maintIntervalTimeOut > 0) {
-            nextState_ = StandbyState::MAINTENANCE;
-            StartStateTransitionTimer(maintIntervalTimeOut);
-        }
+        stateManagerPtr->TransitToStateInner(StandbyState::WORKING);
     }
-    BaseState::GetStateRunningLock()->UnLock();
+}
+
+void NapState::OnStateBlocked()
+{
+    STANDBYSERVICE_LOGD("constraint evalution failed, block current state");
+    auto stateManagerPtr = stateManager_.lock();
+    if (!stateManagerPtr) {
+        return;
+    }
+    int64_t maintIntervalTimeOut = CalculateMaintTimeOut(stateManagerPtr, true);
+    if (maintIntervalTimeOut > 0) {
+        nextState_ = StandbyState::MAINTENANCE;
+        StartStateTransitionTimer(maintIntervalTimeOut);
+    }
+    BaseState::ReleaseStandbyRunningLock();
 }
 
 bool NapState::IsInFinalPhase()

@@ -21,6 +21,10 @@
 
 namespace OHOS {
 namespace DevStandbyMgr {
+namespace {
+    constexpr int32_t LOW_DELAY_TIME_INTERVAL = 0;
+    constexpr int32_t HIGH_DELAY_TIME_INTERVAL = 15 * 60 * 1000;
+}
 TimedTask::TimedTask()
 {}
 
@@ -80,12 +84,13 @@ uint64_t WEAK_FUNC TimedTask::CreateTimer(bool repeat, uint64_t interval, bool i
     return MiscServices::TimeServiceClient::GetInstance()->CreateTimer(timedTask);
 }
 
-bool WEAK_FUNC TimedTask::StartTimer(uint64_t& timeId)
+bool WEAK_FUNC TimedTask::StartDayNightSwitchTimer(uint64_t& timeId)
 {
     int64_t timeDiff {0};
     if (!TimeProvider::TimeDiffToDayNightSwitch(timeDiff)) {
         return false;
     }
+    timeDiff += TimeProvider::GetRandomDelay(LOW_DELAY_TIME_INTERVAL, HIGH_DELAY_TIME_INTERVAL);
     STANDBYSERVICE_LOGD("start next day and night switch after %{public}ld ms", timeDiff);
     auto curTimeStamp = MiscServices::TimeServiceClient::GetInstance()->GetWallTimeMs();
     if (!MiscServices::TimeServiceClient::GetInstance()->StartTimer(timeId, curTimeStamp + timeDiff)) {
@@ -95,7 +100,7 @@ bool WEAK_FUNC TimedTask::StartTimer(uint64_t& timeId)
     return true;
 }
 
-bool WEAK_FUNC TimedTask::RegisterTimer(uint64_t& timeId, bool repeat, uint64_t interval,
+bool WEAK_FUNC TimedTask::RegisterDayNightSwitchTimer(uint64_t& timeId, bool repeat, uint64_t interval,
     const std::function<void()>& callBack)
 {
     timeId = CreateTimer(repeat, interval, false, callBack);
@@ -103,7 +108,7 @@ bool WEAK_FUNC TimedTask::RegisterTimer(uint64_t& timeId, bool repeat, uint64_t 
         STANDBYSERVICE_LOGE("create timer failed");
         return false;
     }
-    return StartTimer(timeId);
+    return StartDayNightSwitchTimer(timeId);
 }
 } // namespace DevStandbyMgr
 } // namespace OHOS

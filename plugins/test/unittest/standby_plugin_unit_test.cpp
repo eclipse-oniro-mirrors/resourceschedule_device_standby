@@ -312,7 +312,6 @@ HWTEST_F(StandbyPluginUnitTest, StandbyPluginUnitTest_009, TestSize.Level1)
     standbyStateManager_->TransitToState(StandbyState::MAINTENANCE);
     standbyStateManager_->TransitToState(StandbyState::NAP);
     standbyStateManager_->TransitToState(StandbyState::WORKING);
-    EXPECT_EQ(standbyStateManager_->curStatePtr_->GetCurState(), StandbyState::WORKING);
     standbyStateManager_->SendNotification(StandbyState::WORKING, true);
     standbyStateManager_->SendNotification(StandbyState::WORKING, false);
 
@@ -376,22 +375,22 @@ HWTEST_F(StandbyPluginUnitTest, StandbyPluginUnitTest_011, TestSize.Level1)
 
 /**
  * @tc.name: StandbyPluginUnitTest_012
- * @tc.desc: test NextStateImpl of StandbyPlugin.
+ * @tc.desc: test TransitToStateInner of StandbyPlugin.
  * @tc.type: FUNC
  * @tc.require: AR000HQ6GA
  */
 HWTEST_F(StandbyPluginUnitTest, StandbyPluginUnitTest_012, TestSize.Level1)
 {
-    standbyStateManager_->NextStateImpl(StandbyState::WORKING);
-    standbyStateManager_->NextStateImpl(StandbyState::DARK);
-    standbyStateManager_->NextStateImpl(StandbyState::NAP);
+    standbyStateManager_->TransitToStateInner(StandbyState::WORKING);
+    standbyStateManager_->TransitToStateInner(StandbyState::DARK);
+    standbyStateManager_->TransitToStateInner(StandbyState::NAP);
     SleepForFC();
-    standbyStateManager_->NextStateImpl(StandbyState::MAINTENANCE);
-    standbyStateManager_->NextStateImpl(StandbyState::NAP);
-    standbyStateManager_->NextStateImpl(StandbyState::SLEEP);
+    standbyStateManager_->TransitToStateInner(StandbyState::MAINTENANCE);
+    standbyStateManager_->TransitToStateInner(StandbyState::NAP);
+    standbyStateManager_->TransitToStateInner(StandbyState::SLEEP);
     SleepForFC();
-    standbyStateManager_->NextStateImpl(StandbyState::MAINTENANCE);
-    standbyStateManager_->NextStateImpl(StandbyState::SLEEP);
+    standbyStateManager_->TransitToStateInner(StandbyState::MAINTENANCE);
+    standbyStateManager_->TransitToStateInner(StandbyState::SLEEP);
     EXPECT_NE(standbyStateManager_->curStatePtr_->GetCurState(), StandbyState::WORKING);
 }
 

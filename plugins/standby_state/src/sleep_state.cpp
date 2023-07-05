@@ -101,11 +101,12 @@ ErrCode SleepState::BeginState()
     maintIntervalIndex_ = 0;
     curPhase_ = SleepStatePhase::SYS_RES_DEEP;
     maintIntervalTimeOut = CalculateMaintTimeOut(stateManagerPtr, true);
-    BaseState::GetPhaseRunningLock()->Lock();
     handler_->PostTask([sleepState = shared_from_this()]() {
+        BaseState::AcquireStandbyRunningLock();
         sleepState->TransitToPhase(sleepState->curPhase_, sleepState->curPhase_ + 1);
         }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     StartStateTransitionTimer(maintIntervalTimeOut);
+    CheckScrenOffHalfHour();
     return ERR_OK;
 }
 
@@ -150,13 +151,13 @@ void SleepState::EndEvalCurrentState(bool evalResult)
     }
     if (curPhase_ < SleepStatePhase::END) {
         if (evalResult) {
-            NextPhaseImpl(curPhase_, curPhase_ + 1);
+            TransitToPhaseInner(curPhase_, curPhase_ + 1);
         }
         SetPhaseTransitOrRepeatedTask();
         return;
     }
     if (!evalResult && isRepeatedDetection_) {
-        stateManagerPtr->TransitToState(StandbyState::DARK);
+        stateManagerPtr->TransitToState(StandbyState::WORKING);
     }
     isRepeatedDetection_ = false;
 }
@@ -169,7 +170,7 @@ void SleepState::SetPhaseTransitOrRepeatedTask()
             sleepState->TransitToPhase(sleepState->curPhase_, sleepState->curPhase_ + 1);
             }, TRANSIT_NEXT_PHASE_INSTANT_TASK);
     } else {
-        BaseState::GetPhaseRunningLock()->Lock();
+        BaseState::ReleaseStandbyRunningLock();
         if (repeatedDetectionTimerId_ == 0 || !MiscServices::TimeServiceClient::GetInstance()->
             StartTimer(repeatedDetectionTimerId_, MiscServices::TimeServiceClient::GetInstance()->
             GetWallTimeMs() + REPEATED_MOTION_DETECTION_INTERVAL)) {
@@ -189,6 +190,19 @@ void SleepState::ShellDump(const std::vector<std::string>& argsInStr, std::strin
                 }, DUMP_REPEAT_DETECTION_TIMEOUT);
             result += "finished start repeated sensor\n";
         }
+    }
+}
+
+void SleepState::CheckScrenOffHalfHour()
+{
+    auto stateManagerPtr = stateManager_.lock();
+    if (!stateManagerPtr) {
+        STANDBYSERVICE_LOGW("state manager is nullptr, cannot begin screen off half hour");
+        return;
+    }
+    if (MiscServices::TimeServiceClient::GetInstance()->GetWallTimeMs() -
+        stateManagerPtr->GetScreenOffTimeStamp() >= HALF_HOUR) {
+        stateManagerPtr->OnScreenOffHalfHour(true, false);
     }
 }
 

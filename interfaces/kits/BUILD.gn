@@ -15,34 +15,40 @@ import("//build/ohos.gni")
 import(
     "//foundation/resourceschedule/device_standby/standby_service.gni")
 
-config("standby_fwk_public_config") {
-  include_dirs = [
-    "include",
-    "${standby_innerkits_path}/include",
-  ]
+cflags = []
+
+config("standby_napi_public_config") {
+  include_dirs = [ "napi/include" ]
 }
 
-ohos_shared_library("standby_fwk") {
+ohos_shared_library("devicestandby") {
   sources = [
-    "${standby_innerkits_path}/src/allow_info.cpp",
-    "${standby_innerkits_path}/src/resourcce_request.cpp",
-    "src/standby_service_proxy.cpp",
-    "src/standby_service_stub.cpp",
-    "src/standby_service_subscriber_proxy.cpp",
+    "napi/src/common.cpp",
+    "napi/src/init.cpp",
+    "napi/src/standby_napi_module.cpp",
   ]
 
-  public_configs = [ ":standby_fwk_public_config" ]
+  public_configs = [ ":standby_napi_public_config" ]
 
-  public_deps =
-      [ "${standby_utils_common_path}:standby_utils_common" ]
+  deps = [
+    "${standby_service_frameworks_path}:standby_fwk",
+    "${standby_interfaces_path}/innerkits:standby_innerkits",
+  ]
 
   external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:napi_base_context",
+    "ability_runtime:wantagent_innerkits",
+    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_single",
+    "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-
+  relative_install_dir = "module/resourceschedule"
   subsystem_name = "resourceschedule"
   part_name = "${standby_service_part_name}"
 }

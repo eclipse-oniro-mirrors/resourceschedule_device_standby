@@ -76,32 +76,31 @@ public:
 
     virtual bool CheckTransitionValid(uint32_t nextState) = 0;
     virtual void EndEvalCurrentState(bool evalResult) = 0;
-    virtual void TryToTransitNextState();
+    virtual void StartTransitNextState();
     virtual void TransitToPhase(uint32_t curPhase, uint32_t nextPhase);
-    virtual void NextPhaseImpl(uint32_t prePhase, uint32_t curPhase);
+    virtual void TransitToPhaseInner(uint32_t prePhase, uint32_t curPhase);
     virtual bool IsInFinalPhase();
+    virtual void OnStateBlocked();
     virtual void ShellDump(const std::vector<std::string>& argsInStr, std::string& result);
 
     virtual void SetTimedTask(const std::string& timedTaskName, uint64_t timedTaskId);
     virtual ErrCode StartStateTransitionTimer(int64_t triggerTime);
-    virtual uint64_t GetTimedTask(const std::string& timedTaskName);
     virtual ErrCode StopTimedTask(const std::string& timedTaskName);
     virtual void DestroyAllTimedTask();
 
     static void InitRunningLock();
-    static std::shared_ptr<PowerMgr::RunningLock>& GetStateRunningLock();
-    static std::shared_ptr<PowerMgr::RunningLock>& GetPhaseRunningLock();
+    static void AcquireStandbyRunningLock();
+    static void ReleaseStandbyRunningLock();
 protected:
     uint32_t curState_ {0};
     uint32_t curPhase_ {0};
     uint32_t nextState_ {0};
-    uint32_t retryTimes_ {0};
     std::weak_ptr<IStateManagerAdapter> stateManager_ {};
     std::shared_ptr<AppExecFwk::EventHandler> &handler_;
     uint64_t enterStandbyTimerId_ {};
     std::unordered_map<std::string, uint64_t> timedTaskMap_ {};
-    static std::shared_ptr<PowerMgr::RunningLock> stateRunningLock_;
-    static std::shared_ptr<PowerMgr::RunningLock> phaseRunningLock_;
+    static bool runningLockStatus_;
+    static std::shared_ptr<PowerMgr::RunningLock> standbyRunningLock_;
 };
 
 class StateWithMaint {

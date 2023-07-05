@@ -30,12 +30,13 @@ uint64_t TimedTask::CreateTimer(bool repeat, uint64_t interval, bool isExact, co
     return 1;
 }
 
-bool TimedTask::StartTimer(uint64_t& timeId)
+bool TimedTask::StartDayNightSwitchTimer(uint64_t& timeId)
 {
     return true;
 }
 
-bool TimedTask::RegisterTimer(uint64_t& timeId, bool repeat, uint64_t interval, const std::function<void()>& callBack)
+bool TimedTask::RegisterDayNightSwitchTimer(uint64_t& timeId, bool repeat, uint64_t interval,
+    const std::function<void()>& callBack)
 {
     return true;
 }

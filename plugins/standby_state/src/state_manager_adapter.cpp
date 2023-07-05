@@ -50,6 +50,11 @@ bool StateManagerAdapter::Init()
     indexToState_ = {
         workingStatePtr_, darkStatePtr_, napStatePtr_, maintStatePtr_, sleepStatePtr_
     };
+    auto callbackTask = [this]() { OnScreenOffHalfHour(true, false); };
+    scrOffHalfHourTimerId_ = TimedTask::CreateTimer(false, 0, true, callbackTask);
+    if (scrOffHalfHourTimerId_ == 0) {
+        STANDBYSERVICE_LOGE("timer of screen off half hour is nullptr");
+    }
     for (const auto& statePtr : indexToState_) {
         if (statePtr->Init() != ERR_OK) {
             return false;
@@ -67,13 +72,17 @@ bool StateManagerAdapter::Init()
 
 bool StateManagerAdapter::UnInit()
 {
+    TransitToState(StandbyState::WORKING);
     curStatePtr_->EndState();
     for (auto& statePtr : indexToState_) {
         statePtr->UnInit();
         statePtr.reset();
     }
-    BaseState::GetStateRunningLock()->UnLock();
-    BaseState::GetPhaseRunningLock()->UnLock();
+    if (scrOffHalfHourTimerId_ > 0) {
+        MiscServices::TimeServiceClient::GetInstance()->StopTimer(scrOffHalfHourTimerId_);
+        MiscServices::TimeServiceClient::GetInstance()->DestroyTimer(scrOffHalfHourTimerId_);
+    }
+    BaseState::ReleaseStandbyRunningLock();
     return true;
 }
 
@@ -88,6 +97,7 @@ void StateManagerAdapter::HandleEvent(const StandbyMessage& message)
 
 void StateManagerAdapter::HandleCommonEvent(const StandbyMessage& message)
 {
+    HandleScrOffHalfHour(message);
     if (message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON ||
         message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING ||
         message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_USB_DEVICE_ATTACHED) {
@@ -99,6 +109,22 @@ void StateManagerAdapter::HandleCommonEvent(const StandbyMessage& message)
     if (message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF ||
         message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING) {
         TransitToState(StandbyState::DARK);
+    }
+}
+
+void StateManagerAdapter::HandleScrOffHalfHour(const StandbyMessage& message)
+{
+    if (scrOffHalfHourTimerId_ == 0) {
+        return;
+    }
+    if (message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF) {
+        isScreenOn_ = false;
+        screenOffTimeStamp_ = MiscServices::TimeServiceClient::GetInstance()->GetWallTimeMs();
+        MiscServices::TimeServiceClient::GetInstance()->StartTimer(scrOffHalfHourTimerId_,
+            screenOffTimeStamp_ + HALF_HOUR);
+    } else if (message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON) {
+        isScreenOn_ = true;
+        MiscServices::TimeServiceClient::GetInstance()->StopTimer(scrOffHalfHourTimerId_);
     }
 }
 
@@ -138,6 +164,7 @@ ErrCode StateManagerAdapter::EndEvalCurrentState(bool evalResult)
 void StateManagerAdapter::BlockCurrentState()
 {
     isBlocked_ = true;
+    curStatePtr_->OnStateBlocked();
 }
 
 void StateManagerAdapter::UnblockCurrentState()
@@ -171,7 +198,10 @@ ErrCode StateManagerAdapter::ExitStandby(uint32_t nextState)
         isEvalution_ = false;
     }
     UnblockCurrentState();
-    NextStateImpl(nextState);
+    if (scrOffHalfHourCtrl_) {
+        OnScreenOffHalfHour(false, false);
+    }
+    TransitToStateInner(nextState);
     return ERR_OK;
 }
 
@@ -198,10 +228,10 @@ ErrCode StateManagerAdapter::EnterStandby(uint32_t nextState)
 
 ErrCode StateManagerAdapter::TransitWithMaint(uint32_t nextState)
 {
-    return NextStateImpl(nextState);
+    return TransitToStateInner(nextState);
 }
 
-ErrCode StateManagerAdapter::NextStateImpl(uint32_t nextState)
+ErrCode StateManagerAdapter::TransitToStateInner(uint32_t nextState)
 {
     curStatePtr_->EndState();
     preStatePtr_ = curStatePtr_;
@@ -209,8 +239,44 @@ ErrCode StateManagerAdapter::NextStateImpl(uint32_t nextState)
     curStatePtr_->BeginState();
 
     SendNotification(preStatePtr_->GetCurState(), true);
-    BaseState::GetStateRunningLock()->UnLock();
+    BaseState::ReleaseStandbyRunningLock();
     return ERR_OK;
+}
+
+void StateManagerAdapter::StopEvalution()
+{
+    if (isEvalution_) {
+        constraintManager_->StopEvalution();
+        isEvalution_ = false;
+    }
+}
+
+void StateManagerAdapter::OnScreenOffHalfHour(bool scrOffHalfHourCtrl, bool repeated)
+{
+    handler_->PostSyncTask([this, scrOffHalfHourCtrl, repeated]() {
+        OnScreenOffHalfHourInner(scrOffHalfHourCtrl, repeated);
+        }, AppExecFwk::EventQueue::Priority::HIGH);
+}
+
+void StateManagerAdapter::OnScreenOffHalfHourInner(bool scrOffHalfHourCtrl, bool repeated)
+{
+    uint32_t curState = curStatePtr_->GetCurState();
+    uint32_t preState = preStatePtr_->GetCurState();
+    STANDBYSERVICE_LOGD("screen off half hour, cur state is %{public}s, pre state is %{public}s",
+        STATE_NAME_LIST[curState].c_str(), STATE_NAME_LIST[preState].c_str());
+    if (scrOffHalfHourCtrl && !(curState == StandbyState::SLEEP || (preState == StandbyState::SLEEP &&
+        curState == StandbyState::MAINTENANCE))) {
+        return;
+    }
+    if (!repeated && scrOffHalfHourCtrl_ == scrOffHalfHourCtrl) {
+        return;
+    }
+    STANDBYSERVICE_LOGD("half hour ctrl status from %{public}d to %{public}d", scrOffHalfHourCtrl_, scrOffHalfHourCtrl);
+    scrOffHalfHourCtrl_ = scrOffHalfHourCtrl;
+    StandbyMessage message(StandbyMessageType::SCREEN_OFF_HALF_HOUR);
+    message.want_ = AAFwk::Want{};
+    message.want_->SetParam(SCR_OFF_HALF_HOUR_STATUS, scrOffHalfHourCtrl_);
+    StandbyServiceImpl::GetInstance()->DispatchEvent(message);
 }
 
 void StateManagerAdapter::SendNotification(uint32_t preState, bool needDispatchEvent)
@@ -245,28 +311,33 @@ void StateManagerAdapter::DumpShowDetailInfo(const std::vector<std::string>& arg
     result += "isEvalution: " + std::to_string(isEvalution_) + ", isBlocking: " +
         std::to_string(isBlocked_) + ", current state: " + STATE_NAME_LIST[
         curStatePtr_->GetCurState()] + ", current phase: " + std::to_string(curStatePtr_->
-        GetCurInnerPhase()) + ", previous state: " + STATE_NAME_LIST[preStatePtr_->GetCurState()] + "\n";
+        GetCurInnerPhase()) + ", previous state: " + STATE_NAME_LIST[preStatePtr_->GetCurState()] +
+        ", scrOffHalfHourCtrl: " + std::to_string(scrOffHalfHourCtrl_) + "\n";
 }
 
 void StateManagerAdapter::DumpEnterSpecifiedState(const std::vector<std::string>& argsInStr, std::string& result)
 {
     isBlocked_ = false;
     if (argsInStr[2] == "false") {
-        curStatePtr_->TryToTransitNextState();
+        curStatePtr_->StartTransitNextState();
     } else {
-        NextStateImpl(static_cast<uint32_t>(std::atoi(argsInStr[1].c_str())));
+        TransitToStateInner(static_cast<uint32_t>(std::atoi(argsInStr[1].c_str())));
     }
 }
 
 void StateManagerAdapter::DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result)
 {
     if (argsInStr[1] == "--motion") {
-        curStatePtr_->TryToTransitNextState();
+        curStatePtr_->StartTransitNextState();
         handler_->PostTask([this]() {
             STANDBYSERVICE_LOGD("after 3000ms, stop sensor");
             this->EndEvalCurrentState(false);
             }, MOTION_DETECTION_TIMEOUT);
         result += "finished start periodly sensor\n";
+    } else if (argsInStr[1] == "--blocked") {
+        BlockCurrentState();
+    } else if (argsInStr[1] == "--halfhour") {
+        OnScreenOffHalfHourInner(true, true);
     }
 }
 }  // namespace DevStandbyMgr

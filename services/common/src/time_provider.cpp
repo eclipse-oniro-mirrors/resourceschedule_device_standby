@@ -15,6 +15,7 @@
 
 #include "time_provider.h"
 
+#include <random>
 #include "time_service_client.h"
 #include "timed_task.h"
 #include "standby_service_log.h"
@@ -117,6 +118,14 @@ int64_t TimeProvider::GetNapTimeOut()
         napTimeOut = TEN_MIN_ENTRANCE_MIN;
     }
     return napTimeOut * MSEC_PER_MIN;
+}
+
+int32_t TimeProvider::GetRandomDelay(int32_t low, int32_t high)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(low, high);
+    return dist(gen);
 }
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

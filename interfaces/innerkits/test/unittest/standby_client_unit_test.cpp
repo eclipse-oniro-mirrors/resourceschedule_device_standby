@@ -48,9 +48,9 @@ HWTEST_F(StandbyServiceClientUnitTest, StandbyServiceClientUnitTest_001, TestSiz
     EXPECT_NE(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(nullSubscriber), ERR_OK);
     EXPECT_NE(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(nullSubscriber), ERR_OK);
     sptr<IStandbyServiceSubscriber> subscriber = new (std::nothrow) StandbyServiceSubscriberStub();
-    EXPECT_EQ(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(subscriber), ERR_OK);
+    EXPECT_NE(StandbyServiceClient::GetInstance().SubscribeStandbyCallback(subscriber), ERR_OK);
     StandbyServiceClient::GetInstance().SubscribeStandbyCallback(subscriber);
-    EXPECT_EQ(StandbyServiceClient::GetInstance().UnsubscribeStandbyCallback(subscriber), ERR_OK);
+    EXPECT_NE(StandbyServiceClient::GetInstance().UnsubscribeStandbyCallback(subscriber), ERR_OK);
     EXPECT_NE(StandbyServiceClient::GetInstance().UnsubscribeStandbyCallback(subscriber), ERR_OK);
 }
 

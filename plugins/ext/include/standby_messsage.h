@@ -35,6 +35,7 @@ struct StandbyMessageType {
         PHASE_TRANSIT,
         RES_CTRL_CONDITION_CHANGED,
         ALLOW_LIST_CHANGED,
+        SCREEN_OFF_HALF_HOUR,
     };
 };
 

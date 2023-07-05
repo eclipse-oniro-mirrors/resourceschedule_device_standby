@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <list>
+#include <set>
 
 #include "json_utils.h"
 #include "standby_service_errors.h"
@@ -42,6 +43,11 @@ public:
 struct TimeLtdProcess {
     std::string name_;
     int32_t maxDurationLim_;
+
+    bool operator < (const TimeLtdProcess& rhs) const
+    {
+        return name_ < rhs.name_;
+    }
 };
 
 struct DefaultResourceConfig {
@@ -79,15 +85,15 @@ public:
     const std::vector<std::string>& GetStrategyConfigList();
     std::vector<int32_t> GetStandbyDurationList(const std::string& switchName);
 
-    std::vector<TimeLtdProcess> GetEligibleAllowTimeConfig(const std::string& paramName,
+    std::set<TimeLtdProcess> GetEligibleAllowTimeConfig(const std::string& paramName,
         uint32_t condition, bool isAllow, bool isApp);
-    std::vector<std::string> GetEligiblePersistAllowConfig(const std::string& paramName,
+    std::set<std::string> GetEligiblePersistAllowConfig(const std::string& paramName,
         uint32_t condition, bool isAllow, bool isApp);
     int32_t GetMaxDuration(const std::string& name, const std::string& paramName, uint32_t condition, bool isApp);
 
 private:
-    template<typename T> std::vector<T> GetEligibleAllowConfig(const std::string& paramName,
-        uint32_t condition, bool isAllow, bool isApp, const std::function<void(bool, std::vector<T>&,
+    template<typename T> std::set<T> GetEligibleAllowConfig(const std::string& paramName,
+        uint32_t condition, bool isAllow, bool isApp, const std::function<void(bool, std::set<T>&,
         const DefaultResourceConfig&)>& func);
     template<typename T> T
         GetConfigWithName(const std::string& switchName, std::unordered_map<std::string, T>& configMap);
