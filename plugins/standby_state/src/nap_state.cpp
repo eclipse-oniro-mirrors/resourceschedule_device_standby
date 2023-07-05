@@ -34,7 +34,7 @@ NapState::NapState(uint32_t curState, uint32_t curPhase, const std::shared_ptr<I
     stateManager, handler)
 {
     maintInterval_ = StandbyConfigManager::GetInstance()->GetStandbyDurationList(NAP_MAINT_DURATION);
-    nextState_ = StandbyState::SLEEP;
+    nextState_ = StandbyState::NAP;
 }
 
 ErrCode NapState::BeginState()
@@ -55,13 +55,15 @@ ErrCode NapState::BeginState()
         return ERR_OK;
     }
 
-    nextState_ = StandbyState::SLEEP;
     maintIntervalIndex_ = 0;
     curPhase_ = NapStatePhase::CONNECTION;
-    int64_t napTimeOut = std::min(TimeConstant::MSEC_PER_SEC * StandbyConfigManager::GetInstance()->
-        GetStandbyParam(NAP_TIMEOUT), TimeProvider::GetNapTimeOut());
-    STANDBYSERVICE_LOGD("napTimeOut is %{public}ld ms", napTimeOut);
-    StartStateTransitionTimer(napTimeOut);
+    if (StandbyConfigManager::GetInstance()->GetStandbySwitch(SLEEP_SWITCH)) {
+        nextState_ = StandbyState::SLEEP;
+        int64_t napTimeOut = std::min(TimeConstant::MSEC_PER_SEC * StandbyConfigManager::GetInstance()->
+            GetStandbyParam(NAP_TIMEOUT), TimeProvider::GetNapTimeOut());
+        STANDBYSERVICE_LOGD("napTimeOut is %{public}ld ms", napTimeOut);
+        StartStateTransitionTimer(napTimeOut);
+    }
     handler_->PostTask([napState = shared_from_this()]() {
         BaseState::AcquireStandbyRunningLock();
         napState->TransitToPhase(napState->curPhase_, napState->curPhase_ + 1);
@@ -112,10 +114,10 @@ void NapState::HandleEvalResToSleepState(bool evalResult)
     if (!stateManagerPtr) {
         return;
     }
-    if (evalResult) {
-        stateManagerPtr->TransitToStateInner(StandbyState::SLEEP);
-    } else {
+    if (!evalResult) {
         stateManagerPtr->TransitToStateInner(StandbyState::WORKING);
+    } else if (nextState_ != StandbyState::NAP) {
+        stateManagerPtr->TransitToStateInner(StandbyState::SLEEP);
     }
 }
 

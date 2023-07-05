@@ -61,20 +61,29 @@ const std::string SENSOR_DETECTION = "sensor_detection";
 const std::string RES_CTRL_CONDITION = "res_ctrl_condition";
 const std::string SCR_OFF_HALF_HOUR_STATUS = "scr_off_half_hour_status";
 const uint32_t NO_DUMP_PARAM_NUMS = 0;
+const uint32_t DUMP_DETAILED_INFO_MAX_NUMS = 2;
 const uint32_t DUMP_SLEEP_SWITCH_PARAM_NUMS = 3;
 const uint32_t DUMP_SLEEP_ENTER_STATE_NUMS = 3;
 const uint32_t DUMP_SLEEP_ALLOW_LIST_NUMS = 4;
 const uint32_t DUMP_SLEEP_APPLY_ALLOW_LIST_NUMS = 7;
-const std::string DUMP_ENABLE = "--enable";
-const std::string DUMP_DISABLE = "--disable";
+const uint32_t DUMP_SWITCH_PARAM_NUMS = 3;
+const uint32_t DUMP_STATE_TIMEOUT_PARAM_NUMS = 3;
+
+const std::string DUMP_ON = "on";
+const std::string DUMP_OFF = "off";
 const std::string DUMP_SLEEP_MODE = "sleep";
 const std::string DUMP_DAYTIME_SLEEP_MODE = "daytimesleep";
 const std::string DUMP_NIGHTTIME_SLEEP_MODE = "nighttimesleep";
+const std::string DUMP_DEBUG_SWITCH = "debug";
+const std::string DUMP_RESET_STATE = "--reset_state";
+const std::string DUMP_DETAIL_CONFIG = "--config";
 
 const std::string DUMP_DETAIL_INFO = "-D";
 const std::string DUMP_ENTER_STATE = "-E";
 const std::string DUMP_APPLY_ALLOW_RECORD = "-A";
 const std::string DUMP_SIMULATE_SENSOR = "-S";
 const std::string DUMP_SUBSCRIBER_OBSERVER = "-O";
+const std::string DUMP_TURN_ON_OFF_SWITCH  = "-T";
+const std::string DUMP_CHANGE_STATE_TIMEOUT  = "-C";
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

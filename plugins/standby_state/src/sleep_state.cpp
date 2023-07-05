@@ -42,9 +42,9 @@ SleepState::SleepState(uint32_t curState, uint32_t curPhase, const std::shared_p
     nextState_ = StandbyState::MAINTENANCE;
 }
 
-ErrCode SleepState::Init()
+ErrCode SleepState::Init(const std::shared_ptr<BaseState>& statePtr)
 {
-    BaseState::Init();
+    BaseState::Init(statePtr);
     if (!StandbyConfigManager::GetInstance()->GetStandbySwitch(DETECT_MOTION_CONFIG)) {
         return ERR_OK;
     }
@@ -184,9 +184,9 @@ void SleepState::ShellDump(const std::vector<std::string>& argsInStr, std::strin
     if (argsInStr[0] == DUMP_SIMULATE_SENSOR) {
         if (argsInStr[1] == "--repeat") {
             StartPeriodlyMotionDetection();
-            handler_->PostTask([this]() {
+            handler_->PostTask([sleepState = shared_from_this()]() {
                 STANDBYSERVICE_LOGD("after 100ms, stop sensor");
-                stateManager_.lock()->EndEvalCurrentState(false);
+                sleepState->stateManager_.lock()->EndEvalCurrentState(false);
                 }, DUMP_REPEAT_DETECTION_TIMEOUT);
             result += "finished start repeated sensor\n";
         }

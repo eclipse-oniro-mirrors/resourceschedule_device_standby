@@ -156,8 +156,7 @@ void StandbyStateSubscriber::NotifyAllowChangedByCommonEvent(int32_t uid, const 
     uint32_t allowType, bool added)
 {
     AAFwk::Want want;
-    // todo COMMON_EVENT_DEVICE_IDLE_MODE_CHANGED --> COMMON_EVENT_DEVICE_IDLE_EXEMPTION_LIST_UPDATED
-    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DEVICE_IDLE_MODE_CHANGED);
+    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DEVICE_IDLE_EXEMPTION_LIST_UPDATED);
     want.SetParam("uid", uid);
     want.SetParam("name", name);
     want.SetParam("resourceType", static_cast<int32_t>(allowType));

@@ -88,7 +88,6 @@ void StandbyServiceImpl::InitReadyState()
 {
     STANDBYSERVICE_LOGI("start init necessary plugin");
     handler_->PostTask([this]() {
-        standbySubscriber_ = StandbyStateSubscriber::GetInstance();
         if (!standbyStateManager_->Init()) {
             STANDBYSERVICE_LOGE("standby state manager init failed");
             return;
@@ -453,13 +452,13 @@ ErrCode StandbyServiceImpl::SubscribeStandbyCallback(const sptr<IStandbyServiceS
         STANDBYSERVICE_LOGI("%{public}s is not exist in StrategyConfigList", subscriber->GetSubscriberName().c_str());
         return ERR_STANDBY_STRATEGY_NOT_DEPLOY;
     }
-    return standbySubscriber_->AddSubscriber(subscriber);
+    return StandbyStateSubscriber::GetInstance()->AddSubscriber(subscriber);
 }
 
 ErrCode StandbyServiceImpl::UnsubscribeStandbyCallback(const sptr<IStandbyServiceSubscriber>& subscriber)
 {
     STANDBYSERVICE_LOGI("add subscriber to stanby service succeed");
-    return standbySubscriber_->RemoveSubscriber(subscriber);
+    return StandbyStateSubscriber::GetInstance()->RemoveSubscriber(subscriber);
 }
 
 ErrCode StandbyServiceImpl::ApplyAllowResource(const sptr<ResourceRequest>& resourceRequest)
@@ -513,7 +512,7 @@ void StandbyServiceImpl::ApplyAllowResInner(const sptr<ResourceRequest>& resourc
             iter->second->allowType_);
         STANDBYSERVICE_LOGD("after update record, there is added exemption type: %{public}d",
             alowTypeDiff);
-        standbySubscriber_->ReportAllowListChanged(uid, name, alowTypeDiff, true);
+        StandbyStateSubscriber::GetInstance()->ReportAllowListChanged(uid, name, alowTypeDiff, true);
         NotifyAllowListChanged(uid, name, alowTypeDiff, true);
     }
     if (iter->second->allowType_ == 0) {
@@ -629,7 +628,7 @@ void StandbyServiceImpl::UnapplyAllowResInner(int32_t uid, const std::string& na
         STANDBYSERVICE_LOGI("allow list has been delete");
     }
     allowRecordPtr->allowType_ = allowRecordPtr->allowType_ - removedNumber;
-    standbySubscriber_->ReportAllowListChanged(uid, name, removedNumber, false);
+    StandbyStateSubscriber::GetInstance()->ReportAllowListChanged(uid, name, removedNumber, false);
     NotifyAllowListChanged(uid, name, removedNumber, false);
     DumpPersistantData();
 }
@@ -760,6 +759,11 @@ void StandbyServiceImpl::DispatchEvent(const StandbyMessage& message)
     strategyManager_->HandleEvent(message);
 }
 
+bool StandbyServiceImpl::IsDebugMode()
+{
+    return debugMode_;
+}
+
 void StandbyServiceImpl::ShellDump(const std::vector<std::string>& argsInStr,
     std::string& result)
 {
@@ -794,6 +798,10 @@ void StandbyServiceImpl::ShellDumpInner(const std::vector<std::string>& argsInSt
         DumpActivateMotion(argsInStr, result);
     } else if (argsInStr[0] == DUMP_SUBSCRIBER_OBSERVER) {
         DumpSubScriberObserver(argsInStr, result);
+    } else if (argsInStr[0] == DUMP_TURN_ON_OFF_SWITCH) {
+        DumpTurnOnOffSwitch(argsInStr, result);
+    } else if (argsInStr[0] == DUMP_CHANGE_STATE_TIMEOUT) {
+        DumpChangeConfigParam(argsInStr, result);
     } else {
         result += "Error params.\n";
     }
@@ -806,6 +814,8 @@ void StandbyServiceImpl::DumpUsage(std::string& result)
     "options list:\n"
     "    -h                                                 help menu\n"
     "    -D                                                 show detail information\n"
+    "        --config                                            show all info, including config\n"
+    "        --reset_state                                       reset parameter, validate debug parameter "
     "    -E                                                 enter the specified state:\n"
     "        {id of state} {whether skip evalution}         enter the specified state, 0-4 represent respectively\n"
     "                                                            woking, dark, nap, maintenance, sleep\n"
@@ -814,7 +824,11 @@ void StandbyServiceImpl::DumpUsage(std::string& result)
     "        --unapply {uid} {name} {type}                  delete the type of the uid from allow list\n"
     "        --get {type} {isApp}                                get allow list info\n"
     "    -S                                                 simulately activate the sensor:\n"
-    "        {--motion or --repeat or --blocked or --halfhour} simulately activate the motion sensor\n";
+    "        {--motion or --repeat or --blocked or --halfhour} simulately activate the motion sensor\n"
+    "    -T  {switch name} {on or off}                      turn on or turn off some switches, switch can be debug,\n"
+    "                                                            nap_switch, sleep_switch, detect_motion, other\n"
+    "                                                            switch only be used after open debug switch\n"
+    "    -C  {parameter name} {parameter value}             change config parameter, only can be used when debug\n";
 
     result.append(dumpHelpMsg);
 }
@@ -825,6 +839,16 @@ void StandbyServiceImpl::DumpShowDetailInfo(const std::vector<std::string>& args
     DumpAllowListInfo(result);
     strategyManager_->ShellDump(argsInStr, result);
     standbyStateManager_->ShellDump(argsInStr, result);
+    if (argsInStr.size() < DUMP_DETAILED_INFO_MAX_NUMS) {
+        return;
+    }
+    if (argsInStr[1] == DUMP_DETAIL_CONFIG) {
+        DumpStandbyConfigInfo(result);
+    } else if (argsInStr[1] == DUMP_RESET_STATE) {
+        standbyStateManager_->UnInit();
+        standbyStateManager_->Init();
+        result += "validate debug parameter\n";
+    }
 }
 
 void StandbyServiceImpl::DumpAllowListInfo(std::string& result)
@@ -857,6 +881,12 @@ void StandbyServiceImpl::DumpAllowListInfo(std::string& result)
         stream.clear();
         index++;
     }
+}
+
+void StandbyServiceImpl::DumpStandbyConfigInfo(std::string& result)
+{
+    result += (debugMode_ ? "debugMode: true\n" : "debugMode: false\n");
+    StandbyConfigManager::GetInstance()->DumpStandbyConfigInfo(result);
 }
 
 void StandbyServiceImpl::DumpEnterSpecifiedState(const std::vector<std::string>& argsInStr,
@@ -906,7 +936,49 @@ void StandbyServiceImpl::DumpModifyAllowList(const std::vector<std::string>& arg
     }
 }
 
-void StandbyServiceImpl::DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result)
+void StandbyServiceImpl::DumpTurnOnOffSwitch(const std::vector<std::string>& argsInStr, std::string& result)
+{
+    if (argsInStr.size() != DUMP_SWITCH_PARAM_NUMS) {
+        result += "not correct parameter number for turn on or turn off switch\n";
+        return;
+    }
+    bool switchStatus {false};
+    if (argsInStr[2] == DUMP_ON) {
+        switchStatus = true;
+    } else if (argsInStr[2] == DUMP_OFF) {
+        switchStatus = false;
+    } else {
+        result += "not correct parameter for turn on or turn off switch\n";
+        return;
+    }
+    const std::string& switchName = argsInStr[1];
+    if (switchName == DUMP_DEBUG_SWITCH) {
+        debugMode_ = switchStatus;
+        StandbyConfigManager::GetInstance()->DumpSetDebugMode(debugMode_);
+        result += (debugMode_ ? "debugMode: true\n" : "debugMode: false\n");
+        return;
+    } else if (!debugMode_) {
+        result += "other switch can be changed only in debug mode\n";
+        return;
+    }
+    StandbyConfigManager::GetInstance()->DumpSetSwitch(switchName, switchStatus, result);
+}
+
+void StandbyServiceImpl::DumpChangeConfigParam(const std::vector<std::string>& argsInStr, std::string& result)
+{
+    if (argsInStr.size() != DUMP_STATE_TIMEOUT_PARAM_NUMS) {
+        result += "not correct parameter number for change state timeout\n";
+        return;
+    }
+    if (!debugMode_) {
+        result += "current is not in debug mode, can not change timeout\n";
+        return;
+    }
+    StandbyConfigManager::GetInstance()->DumpSetParameter(argsInStr[1], std::atoi(argsInStr[2].c_str()), result);
+}
+
+void StandbyServiceImpl::DumpActivateMotion(const std::vector<std::string>& argsInStr,
+    std::string& result)
 {
     standbyStateManager_->ShellDump(argsInStr, result);
     constraintManager_->ShellDump(argsInStr, result);
@@ -914,7 +986,7 @@ void StandbyServiceImpl::DumpActivateMotion(const std::vector<std::string>& args
 
 void StandbyServiceImpl::DumpSubScriberObserver(const std::vector<std::string>& argsInStr, std::string& result)
 {
-    standbySubscriber_->ShellDump(argsInStr, result);
+    StandbyStateSubscriber::GetInstance()->ShellDump(argsInStr, result);
 }
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

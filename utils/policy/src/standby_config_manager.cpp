@@ -313,9 +313,10 @@ bool StandbyConfigManager::ParseDeviceStanbyConfig(const nlohmann::json& devStan
 
 bool StandbyConfigManager::ParseStandbyConfig(const nlohmann::json& standbyConfig)
 {
+    std::lock_guard<std::mutex> lock(configMutex_);
     for (const auto& element : standbyConfig.items()) {
         if (!element.value().is_primitive()) {
-            STANDBYSERVICE_LOGE("there is unexpected type of key in standby config");
+            STANDBYSERVICE_LOGE("there is unexpected type of key in standby config %{public}s", element.key().c_str());
             return false;
         }
         if (element.value().is_boolean()) {
@@ -323,8 +324,8 @@ bool StandbyConfigManager::ParseStandbyConfig(const nlohmann::json& standbyConfi
             standbySwitchMap_.emplace(element.key(), element.value().get<bool>());
         } else if (element.value().is_number_integer()) {
             standbyParaMap_.erase(element.key());
-            if (element.value().get<int32_t>() < 0) {
-                STANDBYSERVICE_LOGE("there is negative value in standby config");
+            if (element.value().get<int32_t>() <= 0) {
+                STANDBYSERVICE_LOGE("there is negative or zero value in standby config");
                 return false;
             }
             standbyParaMap_.emplace(element.key(), element.value().get<int32_t>());
@@ -540,6 +541,57 @@ uint32_t StandbyConfigManager::ParseCondition(const std::string& conditionStr)
         conditionValue |= iter->second;
     }
     return conditionValue;
+}
+
+void StandbyConfigManager::DumpSetDebugMode(bool debugMode)
+{
+    std::lock_guard<std::mutex> lock(configMutex_);
+    if (debugMode) {
+        backStandbySwitchMap_ = standbySwitchMap_;
+        backStandbyParaMap_ = standbyParaMap_;
+    } else {
+        standbySwitchMap_ = backStandbySwitchMap_;
+        standbyParaMap_ = backStandbyParaMap_;
+        backStandbySwitchMap_.clear();
+        backStandbyParaMap_.clear();
+    }
+}
+
+void StandbyConfigManager::DumpSetSwitch(const std::string& switchName, bool switchStatus, std::string& result)
+{
+    std::lock_guard<std::mutex> lock(configMutex_);
+    auto iter = standbySwitchMap_.find(switchName);
+    if (iter == standbySwitchMap_.end()) {
+        result += switchName + " not exist\n";
+        return;
+    }
+    iter->second = switchStatus;
+}
+
+void StandbyConfigManager::DumpSetParameter(const std::string& paramName, int32_t paramValue, std::string& result)
+{
+    std::lock_guard<std::mutex> lock(configMutex_);
+    auto iter = standbyParaMap_.find(paramName);
+    if (iter == standbyParaMap_.end()) {
+        result += paramName + " not exist\n";
+        return;
+    }
+    iter->second = paramValue;
+}
+
+void StandbyConfigManager::DumpStandbyConfigInfo(std::string& result)
+{
+    std::lock_guard<std::mutex> lock(configMutex_);
+    std::stringstream stream;
+    for (const auto& [key, val] : standbySwitchMap_) {
+        stream << key << ": " << (val ? "true" : "false") << "\n";
+    }
+    for (const auto& [key, val] : standbyParaMap_) {
+        stream << key << ": " << val << "\n";
+    }
+    result += stream.str();
+    stream.str("");
+    stream.clear();
 }
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

@@ -24,7 +24,7 @@ class SleepState : public BaseState, public StateWithMaint, public std::enable_s
 public:
     SleepState(uint32_t curState, uint32_t curPhase, const std::shared_ptr<IStateManagerAdapter>&
         stateManager, std::shared_ptr<AppExecFwk::EventHandler>& handler);
-    ErrCode Init() override;
+    ErrCode Init(const std::shared_ptr<BaseState>& statePtr) override;
     ErrCode UnInit() override;
     ErrCode BeginState() override;
     ErrCode EndState() override;

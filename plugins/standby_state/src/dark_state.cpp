@@ -31,8 +31,10 @@ DarkState::DarkState(uint32_t curState, uint32_t curPhase, const std::shared_ptr
     stateManager, handler)
 {
     darkTimeOut_ = TimeConstant::MSEC_PER_SEC * StandbyConfigManager::GetInstance()->GetStandbyParam(DARK_TIMEOUT);
-    nextState_ = StandbyState::NAP;
-    if (!StandbyConfigManager::GetInstance()->GetStandbySwitch(NAP_SWITCH)) {
+    nextState_ = StandbyState::DARK;
+    if (StandbyConfigManager::GetInstance()->GetStandbySwitch(NAP_SWITCH)) {
+        nextState_ = StandbyState::NAP;
+    } else if (StandbyConfigManager::GetInstance()->GetStandbySwitch(SLEEP_SWITCH)) {
         nextState_ = StandbyState::SLEEP;
     }
 }
@@ -40,7 +42,10 @@ DarkState::DarkState(uint32_t curState, uint32_t curPhase, const std::shared_ptr
 ErrCode DarkState::BeginState()
 {
     curPhase_ = 0;
-    return StartStateTransitionTimer(darkTimeOut_);
+    if (nextState_ != StandbyState::DARK) {
+        return StartStateTransitionTimer(darkTimeOut_);
+    }
+    return ERR_OK;
 }
 
 ErrCode DarkState::EndState()
@@ -69,8 +74,8 @@ void DarkState::EndEvalCurrentState(bool evalResult)
     if (!evalResult) {
         STANDBYSERVICE_LOGD("constraint evalution failed, block current state");
         stateManagerPtr->BlockCurrentState();
-    } else {
-        stateManagerPtr->TransitToStateInner(StandbyState::NAP);
+    } else if (nextState_ != StandbyState::DARK) {
+        stateManagerPtr->TransitToStateInner(nextState_);
     }
 }
 }  // namespace DevStandbyMgr

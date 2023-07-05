@@ -67,7 +67,7 @@ public:
         stateManager, std::shared_ptr<AppExecFwk::EventHandler>& handler): curState_(curState),
         curPhase_(curPhase), stateManager_(stateManager), handler_(handler) {}
     virtual ~BaseState() = default;
-    virtual ErrCode Init();
+    virtual ErrCode Init(const std::shared_ptr<BaseState>& statePtr);
     virtual ErrCode UnInit();
     virtual uint32_t GetCurState();
     virtual uint32_t GetCurInnerPhase();
@@ -76,7 +76,7 @@ public:
 
     virtual bool CheckTransitionValid(uint32_t nextState) = 0;
     virtual void EndEvalCurrentState(bool evalResult) = 0;
-    virtual void StartTransitNextState();
+    virtual void StartTransitNextState(const std::shared_ptr<BaseState>& statePtr);
     virtual void TransitToPhase(uint32_t curPhase, uint32_t nextPhase);
     virtual void TransitToPhaseInner(uint32_t prePhase, uint32_t curPhase);
     virtual bool IsInFinalPhase();

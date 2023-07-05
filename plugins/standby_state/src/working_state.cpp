@@ -44,7 +44,7 @@ void WorkingState::checkScreenStatus()
     }
 }
 
-ErrCode WorkingState::Init()
+ErrCode WorkingState::Init(const std::shared_ptr<BaseState>& thisPtr)
 {
     return ERR_OK;
 }

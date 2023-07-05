@@ -50,13 +50,13 @@ bool StateManagerAdapter::Init()
     indexToState_ = {
         workingStatePtr_, darkStatePtr_, napStatePtr_, maintStatePtr_, sleepStatePtr_
     };
-    auto callbackTask = [this]() { OnScreenOffHalfHour(true, false); };
+    auto callbackTask = [this]() { this->OnScreenOffHalfHour(true, false); };
     scrOffHalfHourTimerId_ = TimedTask::CreateTimer(false, 0, true, callbackTask);
     if (scrOffHalfHourTimerId_ == 0) {
         STANDBYSERVICE_LOGE("timer of screen off half hour is nullptr");
     }
     for (const auto& statePtr : indexToState_) {
-        if (statePtr->Init() != ERR_OK) {
+        if (statePtr->Init(statePtr) != ERR_OK) {
             return false;
         }
     }
@@ -319,7 +319,7 @@ void StateManagerAdapter::DumpEnterSpecifiedState(const std::vector<std::string>
 {
     isBlocked_ = false;
     if (argsInStr[2] == "false") {
-        curStatePtr_->StartTransitNextState();
+        curStatePtr_->StartTransitNextState(curStatePtr_);
     } else {
         TransitToStateInner(static_cast<uint32_t>(std::atoi(argsInStr[1].c_str())));
     }
@@ -328,7 +328,7 @@ void StateManagerAdapter::DumpEnterSpecifiedState(const std::vector<std::string>
 void StateManagerAdapter::DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result)
 {
     if (argsInStr[1] == "--motion") {
-        curStatePtr_->StartTransitNextState();
+        curStatePtr_->StartTransitNextState(curStatePtr_);
         handler_->PostTask([this]() {
             STANDBYSERVICE_LOGD("after 3000ms, stop sensor");
             this->EndEvalCurrentState(false);

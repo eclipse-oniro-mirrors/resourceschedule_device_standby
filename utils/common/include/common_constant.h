@@ -64,20 +64,30 @@ extern const std::string RES_CTRL_CONDITION;
 extern const std::string SCR_OFF_HALF_HOUR_STATUS;
 
 extern const uint32_t NO_DUMP_PARAM_NUMS;
+extern const uint32_t DUMP_DETAILED_INFO_MAX_NUMS;
 extern const uint32_t DUMP_SLEEP_SWITCH_PARAM_NUMS;
 extern const uint32_t DUMP_SLEEP_ENTER_STATE_NUMS;
 extern const uint32_t DUMP_SLEEP_ALLOW_LIST_NUMS;
 extern const uint32_t DUMP_SLEEP_APPLY_ALLOW_LIST_NUMS;
-extern const std::string DUMP_ENABLE;
-extern const std::string DUMP_DISABLE;
+extern const uint32_t DUMP_SWITCH_PARAM_NUMS;
+extern const uint32_t DUMP_STATE_TIMEOUT_PARAM_NUMS;
+
+extern const std::string DUMP_ON;
+extern const std::string DUMP_OFF;
 extern const std::string DUMP_SLEEP_MODE;
 extern const std::string DUMP_DAYTIME_SLEEP_MODE;
 extern const std::string DUMP_NIGHTTIME_SLEEP_MODE;
+extern const std::string DUMP_DEBUG_SWITCH;
+extern const std::string DUMP_RESET_STATE;
+extern const std::string DUMP_DETAIL_CONFIG;
+
 extern const std::string DUMP_DETAIL_INFO;
 extern const std::string DUMP_ENTER_STATE;
 extern const std::string DUMP_APPLY_ALLOW_RECORD;
 extern const std::string DUMP_SIMULATE_SENSOR;
 extern const std::string DUMP_SUBSCRIBER_OBSERVER;
+extern const std::string DUMP_TURN_ON_OFF_SWITCH;
+extern const std::string DUMP_CHANGE_STATE_TIMEOUT;
 }  // namespace DevStandbyMgr
 }  // namespace OHOS
 

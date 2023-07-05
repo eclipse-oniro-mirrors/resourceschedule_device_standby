@@ -33,9 +33,9 @@ namespace DevStandbyMgr {
 std::shared_ptr<PowerMgr::RunningLock> BaseState::standbyRunningLock_ = nullptr;
 bool BaseState::runningLockStatus_ = false;
 
-ErrCode BaseState::Init()
+ErrCode BaseState::Init(const std::shared_ptr<BaseState>& statePtr)
 {
-    auto callbackTask = [this]() { this->StartTransitNextState(); };
+    auto callbackTask = [statePtr]() { statePtr->StartTransitNextState(statePtr); };
     enterStandbyTimerId_ = TimedTask::CreateTimer(false, 0, true, callbackTask);
     if (enterStandbyTimerId_ == 0) {
         STANDBYSERVICE_LOGE("%{public}s state init failed", STATE_NAME_LIST[GetCurState()].c_str());
@@ -61,13 +61,13 @@ uint32_t BaseState::GetCurInnerPhase()
     return curPhase_;
 }
 
-void BaseState::StartTransitNextState()
+void BaseState::StartTransitNextState(const std::shared_ptr<BaseState>& statePtr)
 {
-    handler_->PostTask([this]() {
+    handler_->PostTask([statePtr]() {
         STANDBYSERVICE_LOGD("due to timeout, try to enter %{public}s state from %{public}s",
-            STATE_NAME_LIST[nextState_].c_str(), STATE_NAME_LIST[curState_].c_str());
+            STATE_NAME_LIST[statePtr->nextState_].c_str(), STATE_NAME_LIST[statePtr->curState_].c_str());
         BaseState::AcquireStandbyRunningLock();
-        auto stateManagerPtr = stateManager_.lock();
+        auto stateManagerPtr = statePtr->stateManager_.lock();
         if (!stateManagerPtr) {
             STANDBYSERVICE_LOGW("state manager is nullptr, can not transit to next state");
             BaseState::ReleaseStandbyRunningLock();
@@ -77,8 +77,8 @@ void BaseState::StartTransitNextState()
             STANDBYSERVICE_LOGW("state is in evalution, stop evalution and enter next state");
             stateManagerPtr->StopEvalution();
         }
-        if (stateManagerPtr->TransitToState(nextState_) != ERR_OK) {
-            STANDBYSERVICE_LOGW("can not transit to state %{public}d, block current state", nextState_);
+        if (stateManagerPtr->TransitToState(statePtr->nextState_) != ERR_OK) {
+            STANDBYSERVICE_LOGW("can not transit to state %{public}d, block current state", statePtr->nextState_);
             stateManagerPtr->BlockCurrentState();
             BaseState::ReleaseStandbyRunningLock();
         }

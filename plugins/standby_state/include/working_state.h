@@ -23,7 +23,7 @@ class IStateManagerAdapter;
 class WorkingState : public BaseState, public std::enable_shared_from_this<WorkingState> {
 using BaseState::BaseState;
 public:
-    ErrCode Init() override;
+    ErrCode Init(const std::shared_ptr<BaseState>& statePtr) override;
     ErrCode UnInit() override;
     ErrCode BeginState() override;
     ErrCode EndState() override;

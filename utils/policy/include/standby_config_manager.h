@@ -91,6 +91,10 @@ public:
         uint32_t condition, bool isAllow, bool isApp);
     int32_t GetMaxDuration(const std::string& name, const std::string& paramName, uint32_t condition, bool isApp);
 
+    void DumpSetDebugMode(bool debugMode);
+    void DumpSetSwitch(const std::string& switchName, bool switchStatus, std::string& result);
+    void DumpSetParameter(const std::string& paramName, int32_t paramValue, std::string& result);
+    void DumpStandbyConfigInfo(std::string& result);
 private:
     template<typename T> std::set<T> GetEligibleAllowConfig(const std::string& paramName,
         uint32_t condition, bool isAllow, bool isApp, const std::function<void(bool, std::set<T>&,
@@ -122,6 +126,9 @@ private:
     std::unordered_map<std::string, std::shared_ptr<std::vector<DefaultResourceConfig>>> defaultResourceConfigMap_;
     std::vector<TimerResourceConfig> timerResConfigList_;
     std::unordered_map<std::string, std::vector<int32_t>> intervalListMap_;
+
+    std::unordered_map<std::string, bool> backStandbySwitchMap_;
+    std::unordered_map<std::string, int32_t> backStandbyParaMap_;
 };
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

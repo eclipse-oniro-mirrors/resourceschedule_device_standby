@@ -90,6 +90,7 @@ public:
     void GetAllowListInner(uint32_t allowType, std::vector<AllowInfo>& allowInfoList,
         uint32_t reasonCode);
     void DispatchEvent(const StandbyMessage& message);
+    bool IsDebugMode();
 private:
     void ApplyAllowResInner(const sptr<ResourceRequest>& resourceRequest, int32_t pid);
     void UpdateRecord(std::shared_ptr<AllowRecord>& allowRecord, const sptr<ResourceRequest>& resourceRequest);
@@ -115,12 +116,15 @@ private:
     void DumpUsage(std::string& result);
     void DumpShowDetailInfo(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpAllowListInfo(std::string& result);
+    void DumpStandbyConfigInfo(std::string& result);
     void DumpChangeModeSwitch(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpEnterSpecifiedState(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpModifyAllowList(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpActivateMotion(const std::vector<std::string>& argsInStr, std::string& result);
     void DumpSubScriberObserver(const std::vector<std::string>& argsInStr, std::string& result);
 
+    void DumpTurnOnOffSwitch(const std::vector<std::string>& argsInStr, std::string& result);
+    void DumpChangeConfigParam(const std::vector<std::string>& argsInStr, std::string& result);
 private:
     std::atomic<bool> isServiceReady_ {false};
 
@@ -131,13 +135,13 @@ private:
     std::shared_ptr<CommonEventObserver> commonEventObserver_ {nullptr};
     uint64_t dayNightSwitchTimerId_ {0};
     std::unordered_map<std::string, std::shared_ptr<AllowRecord>> allowInfoMap_ {};
-    std::shared_ptr<StandbyStateSubscriber> standbySubscriber_ {nullptr};
 
     void* registerPlugin_ {nullptr};
     std::shared_ptr<IConstraintManagerAdapter> constraintManager_ {nullptr};
     std::shared_ptr<IListenerManagerAdapter> listenerManager_ {nullptr};
     std::shared_ptr<IStrategyManagerAdapter> strategyManager_ {nullptr};
     std::shared_ptr<IStateManagerAdapter> standbyStateManager_ {nullptr};
+    bool debugMode_ {false};
 };
 }  // namespace DevStandbyMgr
 }  // namespace OHOS

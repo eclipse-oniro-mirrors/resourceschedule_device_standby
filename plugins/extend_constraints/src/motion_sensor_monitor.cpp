@@ -142,7 +142,7 @@ bool MotionSensorMonitor::Init()
 void MotionSensorMonitor::StartMonitoring()
 {
     STANDBYSERVICE_LOGD("start motion sensor monitoring");
-    handler_->PostTask([this]() {
+    handler_->PostTask([]() {
         STANDBYSERVICE_LOGI("stop motion sensor monitoring");
         StandbyServiceImpl::GetInstance()->GetStateManager()->EndEvalCurrentState(true);
         }, MOTION_DECTION_TASK, totalTimeOut_);
@@ -151,8 +151,8 @@ void MotionSensorMonitor::StartMonitoring()
 
 void MotionSensorMonitor::StopMotionDetection()
 {
-    handler_->PostTask([this]() {
-        StopMonitoringInner();
+    handler_->PostTask([monitor = shared_from_this()]() {
+        monitor->StopMonitoringInner();
         }, MOTION_DECTION_TASK, detectionTimeOut_);
 }
 
@@ -164,8 +164,8 @@ void MotionSensorMonitor::PeriodlyStartMotionDetection()
         return;
     }
     StopMotionDetection();
-    handler_->PostTask([this]() {
-        PeriodlyStartMotionDetection();
+    handler_->PostTask([monitor = shared_from_this()]() {
+        monitor->PeriodlyStartMotionDetection();
         }, MOTION_DECTION_TASK, detectionTimeOut_ + restTimeOut_);
 }
 
