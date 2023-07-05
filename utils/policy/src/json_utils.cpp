@@ -79,9 +79,14 @@ bool JsonUtils::CreateNodeFile(const std::string &filePath)
         STANDBYSERVICE_LOGD("the standby service config file: %{public}s already exists.", filePath.c_str());
         return true;
     }
-    int32_t fd = open(filePath.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    std::string fullpath {""};
+    if (!GetRealPath(filePath, fullpath)) {
+        STANDBYSERVICE_LOGD("the standby service config file: %{public}s not exists.", filePath.c_str());
+        fullpath = filePath;
+    }
+    int32_t fd = open(fullpath.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (fd < ERR_OK) {
-        STANDBYSERVICE_LOGE("Fail to open file: %{public}s", filePath.c_str());
+        STANDBYSERVICE_LOGE("Fail to open file: %{public}s", fullpath.c_str());
         return false;
     }
     close(fd);

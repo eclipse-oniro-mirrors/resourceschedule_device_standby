@@ -33,6 +33,7 @@
 #include "time_service_client.h"
 #include "common_event_support.h"
 
+#include "json_utils.h"
 #include "timed_task.h"
 #include "time_provider.h"
 #include "istandby_service.h"
@@ -51,6 +52,7 @@ const std::string ALLOW_RECORD_FILE_PATH = "/data/service/el1/public/device_stan
 const std::string STANDBY_MSG_HANDLER = "StandbyMsgHandler";
 const std::string ON_PLUGIN_REGISTER = "OnPluginRegister";
 const std::string STANDBY_PERMISSION = "ohos.permission.DEVICE_STANDBY_EXEMPT_LIST_UPDATED";
+const std::string SYSTEM_SO_PATH = "/system/lib64/";
 }
 
 IMPLEMENT_SINGLE_INSTANCE(StandbyServiceImpl);
@@ -106,6 +108,7 @@ void StandbyServiceImpl::InitReadyState()
         }
         RegisterTimeObserver();
         ParsePersistentData();
+        DumpPersistantData();
         isServiceReady_.store(true);
         }, AppExecFwk::EventQueue::Priority::HIGH);
 }
@@ -241,16 +244,25 @@ ErrCode StandbyServiceImpl::ResetTimeObserver()
 ErrCode StandbyServiceImpl::RegisterPlugin(const std::string& pluginName)
 {
     STANDBYSERVICE_LOGI("start register plugin %{public}s", pluginName.c_str());
-    registerPlugin_ = dlopen(pluginName.c_str(), RTLD_NOW);
+    std::string realPluginName {""};
+    if (!JsonUtils::GetRealPath(SYSTEM_SO_PATH + pluginName, realPluginName)) {
+        STANDBYSERVICE_LOGW("failed to get valid plugin path");
+        return ERR_STANDBY_PLUGIN_NOT_EXIST;
+    }
+    if (strncmp(realPluginName.c_str(), SYSTEM_SO_PATH.c_str(), SYSTEM_SO_PATH.size()) != 0) {
+        STANDBYSERVICE_LOGW("plugin must in system directory");
+        return ERR_STANDBY_PLUGIN_NOT_EXIST;
+    }
+    registerPlugin_ = dlopen(realPluginName.c_str(), RTLD_NOW);
     if (!registerPlugin_) {
         dlclose(registerPlugin_);
-        STANDBYSERVICE_LOGE("failed to open plugin %{public}s", pluginName.c_str());
+        STANDBYSERVICE_LOGE("failed to open plugin %{public}s", realPluginName.c_str());
         return ERR_STANDBY_PLUGIN_NOT_EXIST;
     }
     void* pluginFunc = dlsym(registerPlugin_, ON_PLUGIN_REGISTER.c_str());
     if (!pluginFunc) {
         dlclose(registerPlugin_);
-        STANDBYSERVICE_LOGE("failed to find extern func of plugin %{public}s", pluginName.c_str());
+        STANDBYSERVICE_LOGE("failed to find extern func of plugin %{public}s", realPluginName.c_str());
         return ERR_STANDBY_PLUGIN_NOT_EXIST;
     }
     auto onPluginInitFunc = reinterpret_cast<bool (*)()>(pluginFunc);
@@ -314,7 +326,6 @@ bool StandbyServiceImpl::ParsePersistentData()
     std::unordered_map<int32_t, std::string> pidNameMap {};
     GetPidAndProcName(pidNameMap);
     if (pidNameMap.empty()) {
-        DumpPersistantData();
         return false;
     }
     nlohmann::json root;
@@ -336,6 +347,7 @@ bool StandbyServiceImpl::ParsePersistentData()
             iter++;
         }
     }
+    DumpPersistantData();
     STANDBYSERVICE_LOGI("after reboot, allowInfoMap_ size is %{public}lu", allowInfoMap_.size());
     RecoverTimeLimitedTask();
     return true;
