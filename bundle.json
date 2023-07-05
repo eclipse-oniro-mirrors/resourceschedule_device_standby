@@ -34,6 +34,7 @@
         "hiviewdfx_hilog_native",
         "init",
         "ipc",
+        "input",
         "napi",
         "power_manager",
         "safwk",
