@@ -23,7 +23,7 @@
 #include "common_event_listener.h"
 #include "device_standby_switch.h"
 #include "standby_service_impl.h"
-
+#include "input_manager_listener.h"
 
 namespace OHOS {
 namespace DevStandbyMgr {
@@ -49,6 +49,7 @@ bool ListenerManagerAdapter::Init()
     }
     EventFwk::CommonEventSubscribeInfo subscriberInfo(matchingSkills);
     messageListenerList_.emplace_back(std::make_shared<CommonEventListener>(subscriberInfo));
+    messageListenerList_.emplace_back(std::make_shared<InputManagerListener>());
     STANDBYSERVICE_LOGI("listener manager plugin initialization succeed");
     return true;
 }

@@ -98,6 +98,7 @@ void StateManagerAdapter::HandleEvent(const StandbyMessage& message)
 void StateManagerAdapter::HandleCommonEvent(const StandbyMessage& message)
 {
     HandleScrOffHalfHour(message);
+    HandleOpenCloseLid(message);
     if (message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON ||
         message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING ||
         message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_USB_DEVICE_ATTACHED) {
@@ -125,6 +126,17 @@ void StateManagerAdapter::HandleScrOffHalfHour(const StandbyMessage& message)
     } else if (message.action_ == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON) {
         isScreenOn_ = true;
         MiscServices::TimeServiceClient::GetInstance()->StopTimer(scrOffHalfHourTimerId_);
+    }
+}
+
+void StateManagerAdapter::HandleOpenCloseLid(const StandbyMessage& message)
+{
+    if (message.action_ == LID_OPEN) {
+        TransitToState(StandbyState::WORKING);
+    } else if (message.action_ == LID_CLOSE && (curStatePtr_->GetCurState() != StandbyState::SLEEP &&
+        curStatePtr_->GetCurState() != StandbyState::MAINTENANCE)) {
+        UnblockCurrentState();
+        TransitToStateInner(StandbyState::SLEEP);
     }
 }
 

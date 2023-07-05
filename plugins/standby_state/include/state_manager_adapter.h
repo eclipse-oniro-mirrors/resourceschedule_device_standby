@@ -39,7 +39,7 @@ public:
     ErrCode TransitToState(uint32_t nextState) override;
     ErrCode TransitToStateInner(uint32_t nextState) override;
     void StopEvalution() override;
-
+    void HandleOpenCloseLid(const StandbyMessage& message);
     void ShellDump(const std::vector<std::string>& argsInStr, std::string& result) override;
 private:
     void SendNotification(uint32_t preState, bool needDispatchEvent);

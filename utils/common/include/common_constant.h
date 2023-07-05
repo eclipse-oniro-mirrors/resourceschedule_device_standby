@@ -63,6 +63,9 @@ extern const std::string SENSOR_DETECTION;
 extern const std::string RES_CTRL_CONDITION;
 extern const std::string SCR_OFF_HALF_HOUR_STATUS;
 
+extern const std::string LID_CLOSE;
+extern const std::string LID_OPEN;
+
 extern const uint32_t NO_DUMP_PARAM_NUMS;
 extern const uint32_t DUMP_DETAILED_INFO_MAX_NUMS;
 extern const uint32_t DUMP_SLEEP_SWITCH_PARAM_NUMS;

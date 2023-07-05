@@ -115,7 +115,7 @@ void NapState::HandleEvalResToSleepState(bool evalResult)
         return;
     }
     if (!evalResult) {
-        stateManagerPtr->TransitToStateInner(StandbyState::WORKING);
+        stateManagerPtr->TransitToState(StandbyState::WORKING);
     } else if (nextState_ != StandbyState::NAP) {
         stateManagerPtr->TransitToStateInner(StandbyState::SLEEP);
     }

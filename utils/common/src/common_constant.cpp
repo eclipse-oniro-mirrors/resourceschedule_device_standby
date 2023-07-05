@@ -60,6 +60,10 @@ const std::string SENSOR_DETECTION = "sensor_detection";
 
 const std::string RES_CTRL_CONDITION = "res_ctrl_condition";
 const std::string SCR_OFF_HALF_HOUR_STATUS = "scr_off_half_hour_status";
+
+const std::string LID_CLOSE = "LID_CLOSE";
+const std::string LID_OPEN = "LID_OPEN";
+
 const uint32_t NO_DUMP_PARAM_NUMS = 0;
 const uint32_t DUMP_DETAILED_INFO_MAX_NUMS = 2;
 const uint32_t DUMP_SLEEP_SWITCH_PARAM_NUMS = 3;
