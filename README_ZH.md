@@ -12,21 +12,6 @@
 
 ![](figures/zh-cn_module_image.png)
 
-## 目录
-
-```
-/foundation/resourceschedule/device_standby
-├── frameworks       # 接口实现
-├── interfaces
-│   ├── innerkits    # 对内接口目录
-│   └── kits         # 对外接口目录
-├── sa_profile       # 组件服务配置
-├── services         # 组件服务实现
-└── utils            # 组件工具实现
-└── plugins          # 插件（状态监控、决策、转换、执行）
-└── bundle.json      # 部件描述及编译文件
-```
-
 ## 部件说明
 本部件主要处理在系统正常工作（Active）与系统待机工作（Active->Standby）的状态转换。
 
@@ -52,6 +37,36 @@
 
 ![](figures/zh-cn_car_image.png)
 
+## 开发说明
 
+### 1.目录
 
+```
+/foundation/resourceschedule/device_standby
+├── frameworks       # 接口实现
+├── interfaces
+│   ├── innerkits    # 对内接口目录
+│   └── kits         # 对外接口目录
+├── sa_profile       # 组件服务配置
+├── services         # 组件服务实现
+└── utils            # 组件工具实现
+└── plugins          # 插件（状态监控、决策、转换、执行）
+└── bundle.json      # 部件描述及编译文件
+```
 
+### 2.部件内子模块职责说明
+
+|子模块名称   |功能职责描述    |
+|------------|---------------|
+|interface   |1.对外提供inner级别dump维测、豁免、通知接口。 |
+|            |2.提供约束接口。 |
+|sa_profile  |在服务管理中配置standby服务。|
+|services    |1.内部核心服务功能实现。 |
+|            |2.通知、查询功能。 |
+|plugins     |1.状态监控。 |
+|            |2.决策是否限制设备应用资源。| 
+|            |3.转换设备状态。  |
+|            |4.执行策略。|
+|utils       |1.通用工具、日志实现。|
+|            |2.相关配置读写。 |
+|frameworks  |配置对外接口框架能力。|
