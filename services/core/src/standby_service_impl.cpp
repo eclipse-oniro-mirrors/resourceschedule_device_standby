@@ -52,7 +52,7 @@ const std::string ALLOW_RECORD_FILE_PATH = "/data/service/el1/public/device_stan
 const std::string STANDBY_MSG_HANDLER = "StandbyMsgHandler";
 const std::string ON_PLUGIN_REGISTER = "OnPluginRegister";
 const std::string STANDBY_PERMISSION = "ohos.permission.DEVICE_STANDBY_EXEMPT_LIST_UPDATED";
-const std::string SYSTEM_SO_PATH = "/system/lib64/";
+const std::string SYSTEM_SO_PATH = "/system/lib/";
 const std::string STANDBY_EXEMPTION_PERMISSION = "ohos.permission.DEVICE_STANDBY_EXEMPTION";
 }
 
@@ -283,7 +283,7 @@ void StandbyServiceImpl::RegisterPluginInner(IConstraintManagerAdapter* constrai
     IStrategyManagerAdapter* strategyManager,
     IStateManagerAdapter* stateManager)
 {
-    STANDBYSERVICE_LOGI("RegisterPluginInner this address %{public}ld", (int64_t)this);
+    STANDBYSERVICE_LOGI("RegisterPluginInner this address %{public}lld", (int64_t)this);
     constraintManager_ = std::shared_ptr<IConstraintManagerAdapter>(constraintManager);
     listenerManager_ = std::shared_ptr<IListenerManagerAdapter>(listenerManager);
     strategyManager_ = std::shared_ptr<IStrategyManagerAdapter>(strategyManager);
@@ -357,7 +357,7 @@ bool StandbyServiceImpl::ParsePersistentData()
         }
     }
     DumpPersistantData();
-    STANDBYSERVICE_LOGI("after reboot, allowInfoMap_ size is %{public}lu", allowInfoMap_.size());
+    STANDBYSERVICE_LOGI("after reboot, allowInfoMap_ size is %{public}d", static_cast<int32_t>(allowInfoMap_.size()));
     RecoverTimeLimitedTask();
     return true;
 }
@@ -369,7 +369,8 @@ void StandbyServiceImpl::GetPidAndProcName(std::unordered_map<int32_t, std::stri
         STANDBYSERVICE_LOGE("connect to app manager service failed");
         return;
     }
-    STANDBYSERVICE_LOGD("GetAllRunningProcesses result size is %{public}lu", allAppProcessInfos.size());
+    STANDBYSERVICE_LOGD("GetAllRunningProcesses result size is %{public}d",
+        static_cast<int32_t>(allAppProcessInfos.size()));
     for (const auto& info : allAppProcessInfos) {
         pidNameMap.emplace(info.pid_, info.processName_);
     }
@@ -378,7 +379,8 @@ void StandbyServiceImpl::GetPidAndProcName(std::unordered_map<int32_t, std::stri
         STANDBYSERVICE_LOGE("connect to app ability service failed");
         return;
     }
-    STANDBYSERVICE_LOGD("GetRunningSystemProcess result size is %{public}lu", systemProcessInfos.size());
+    STANDBYSERVICE_LOGD("GetRunningSystemProcess result size is %{public}d",
+        static_cast<int32_t>(systemProcessInfos.size()));
     for (const auto& info : systemProcessInfos) {
         pidNameMap.emplace(info.pid, info.processName);
     }
@@ -606,7 +608,7 @@ void StandbyServiceImpl::UpdateRecord(std::shared_ptr<AllowRecord>& allowRecord,
         if (allowNumber != AllowType::WORK_SCHEDULER) {
             maxDuration = std::min(resourceRequest->GetDuration(), StandbyConfigManager::GetInstance()->
                 GetMaxDuration(name, AllowTypeName[allowTypeIndex], condition, isApp)) * TimeConstant::MSEC_PER_SEC;
-            STANDBYSERVICE_LOGD("name: %{public}s, condition: %{public}d, res: %{public}s, duration: %{public}ld",
+            STANDBYSERVICE_LOGD("name: %{public}s, condition: %{public}d, res: %{public}s, duration: %{public}lld",
                 name.c_str(), condition, AllowTypeName[allowTypeIndex].c_str(), maxDuration);
         } else {
             maxDuration = resourceRequest->GetDuration() * TimeConstant::MSEC_PER_SEC;
@@ -763,7 +765,7 @@ void StandbyServiceImpl::GetTemporaryAllowList(uint32_t allowTypeIndex, std::vec
             continue;
         }
         allowInfoList.emplace_back((1 << allowTypeIndex), allowRecordPtr->name_,
-            std::max(it->endTime_ - curTime, 0L));
+            std::max(static_cast<long>(it->endTime_ - curTime), 0L));
     }
 }
 
@@ -805,14 +807,14 @@ ErrCode StandbyServiceImpl::GetEligiableRestrictSet(const std::string& strategyN
 
     std::vector<AllowInfo> allowInfoList;
     GetAllowListInner(AllowType::FREEZE, allowInfoList, ReasonCodeEnum::REASON_NATIVE_API);
-    STANDBYSERVICE_LOGD("allowInfoList size is %{public}lu", allowInfoList.size());
+    STANDBYSERVICE_LOGD("allowInfoList size is %{public}d", static_cast<int32_t>(allowInfoList.size()));
     std::set<std::string> allowSet;
     for_each(allowInfoList.begin(), allowInfoList.end(),
         [&allowSet](AllowInfo& allowInfo) { allowSet.insert(allowInfo.GetName()); });
 
     std::set_difference(originRestrictSet.begin(), originRestrictSet.end(), allowSet.begin(),
         allowSet.end(), std::inserter(restrictSet, restrictSet.begin()));
-    STANDBYSERVICE_LOGD("restrictSet size is %{public}lu", restrictSet.size());
+    STANDBYSERVICE_LOGD("restrictSet size is %{public}d", static_cast<int32_t>(restrictSet.size()));
     return ERR_OK;
 }
 

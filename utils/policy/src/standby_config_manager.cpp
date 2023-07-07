@@ -216,7 +216,8 @@ template<typename T> std::set<T> StandbyConfigManager::GetEligibleAllowConfig(co
     }
     std::set<T> eligibleResCtrlConfig;
     const auto& resCtrlConfig = *(defaultResourceConfigMap_.find(paramName)->second);
-    STANDBYSERVICE_LOGD("find duration from %{public}s, size is %{public}lu", paramName.c_str(), resCtrlConfig.size());
+    STANDBYSERVICE_LOGD("find duration from %{public}s, size is %{public}d",
+        paramName.c_str(), static_cast<int32_t>(resCtrlConfig.size()));
     for (const auto& config : resCtrlConfig) {
         if (config.isAllow_ != isAllow) {
             continue;
@@ -233,7 +234,8 @@ template<typename T> std::set<T> StandbyConfigManager::GetEligibleAllowConfig(co
         }
         func(isApp, eligibleResCtrlConfig, config);
     }
-    STANDBYSERVICE_LOGD("eligibleResCtrlConfig size is %{public}lu", eligibleResCtrlConfig.size());
+    STANDBYSERVICE_LOGD("eligibleResCtrlConfig size is %{public}d",
+        static_cast<int32_t>(eligibleResCtrlConfig.size()));
     return eligibleResCtrlConfig;
 }
 
@@ -247,7 +249,8 @@ std::set<TimeLtdProcess> StandbyConfigManager::GetEligibleAllowTimeConfig(const 
         } else {
             eligibleResCtrlConfig.insert(config.timeLtdProcesses_.begin(), config.timeLtdProcesses_.end());
         }
-        STANDBYSERVICE_LOGD("after calculate, eligible size is %{public}lu", eligibleResCtrlConfig.size());
+        STANDBYSERVICE_LOGD("after calculate, eligible size is %{public}d",
+            static_cast<int32_t>(eligibleResCtrlConfig.size()));
     };
     return GetEligibleAllowConfig<TimeLtdProcess>(paramName, condition, isAllow, isApp, func);
 }
