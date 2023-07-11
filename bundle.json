@@ -40,7 +40,8 @@
         "safwk",
         "samgr",
         "sensor",
-        "time_service"
+        "time_service",
+        "call_manager"
       ],
       "third_party": [
         "googletest"
