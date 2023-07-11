@@ -636,7 +636,7 @@ void StandbyServiceImpl::UpdateRecord(std::shared_ptr<AllowRecord>& allowRecord,
             allowTimeList.emplace_back(AllowTime{allowTypeIndex, endTime, resourceRequest->GetReason()});
         } else {
             it->reason_ = resourceRequest->GetReason();
-            std::max(static_cast<long>(it->endTime_ - curTime), 0L));
+            it->endTime_ = std::max(static_cast<long>(it->endTime_ - curTime), 0L);
         }
         allowRecord->allowType_ = (allowRecord->allowType_ | allowNumber);
         auto task = [this, uid, name, allowType] () {
@@ -794,7 +794,7 @@ void StandbyServiceImpl::GetTemporaryAllowList(uint32_t allowTypeIndex, std::vec
             continue;
         }
         allowInfoList.emplace_back((1 << allowTypeIndex), allowRecordPtr->name_,
-            std::max(it->endTime_ - curTime, 0L));
+            std::max(static_cast<long>(it->endTime_ - curTime), 0L));
     }
 }
 

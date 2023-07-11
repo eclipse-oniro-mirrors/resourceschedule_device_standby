@@ -43,7 +43,9 @@
         "time_service",
         "call_manager",
         "netmanager_base",
-        "wifi"
+        "wifi",
+        "work_scheduler",
+        "background_task_mgr"
       ],
       "third_party": [
         "googletest"
