@@ -41,7 +41,9 @@
         "samgr",
         "sensor",
         "time_service",
-        "call_manager"
+        "call_manager",
+        "netmanager_base",
+        "wifi"
       ],
       "third_party": [
         "googletest"
