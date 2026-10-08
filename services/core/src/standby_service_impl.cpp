@@ -1591,6 +1591,10 @@ void StandbyServiceImpl::HandleAudioRendererChanged(const int64_t value, const s
 
 void StandbyServiceImpl::HandleAudioCapturerChanged(const int64_t value, const std::string &sceneInfo)
 {
+    if (value != ResourceSchedule::ResType::AudioCaptureState::AUDIO_CAPTURE_BEGIN &&
+        value != ResourceSchedule::ResType::AudioCaptureState::AUDIO_CAPTURE_END) {
+        return;
+    }
     nlohmann::json payload = nlohmann::json::parse(sceneInfo, nullptr, false);
     if (payload.is_discarded()) {
         STANDBYSERVICE_LOGE("parse json failed");
