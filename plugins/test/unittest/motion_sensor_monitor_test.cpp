@@ -76,6 +76,7 @@ HWTEST_F(MotionSensorMonitorTest, AcceleromterCallback, TestSize.Level1)
     GravityData data = { 0, 0, 0 };
     event.sensorTypeId = SENSOR_TYPE_ID_NONE;
     event.data = reinterpret_cast<uint8_t *>(&data);
+    event.dataLen = sizeof(AccelData);
     repeatedMotionConstraint->energy_ = 10000;
     repeatedMotionConstraint->AcceleromterCallback(&event);
     repeatedMotionConstraint->AcceleromterCallback(nullptr);
@@ -97,6 +98,7 @@ HWTEST_F(MotionSensorMonitorTest, RepeatAcceleromterCallback, TestSize.Level1)
     GravityData data = { 0, 0, 0 };
     event.sensorTypeId = SENSOR_TYPE_ID_NONE;
     event.data = reinterpret_cast<uint8_t *>(&data);
+    event.dataLen = sizeof(AccelData);
     repeatedMotionConstraint->RepeatAcceleromterCallback(&event);
     repeatedMotionConstraint->energy_ = 10000;
     repeatedMotionConstraint->RepeatAcceleromterCallback(&event);

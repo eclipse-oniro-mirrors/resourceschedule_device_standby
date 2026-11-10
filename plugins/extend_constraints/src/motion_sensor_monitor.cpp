@@ -66,6 +66,10 @@ void MotionSensorMonitor::AcceleromterCallback(SensorEvent *event)
     if (event == NULL) {
         return;
     }
+    if (event->data == NULL || event->dataLen < static_cast<uint32_t>(sizeof(AccelData))) {
+        STANDBYSERVICE_LOGD("accelerometer event payload is too short, dataLen: %{public}u", event->dataLen);
+        return;
+    }
     AccelData* sensorData = reinterpret_cast<AccelData*>(event->data);
     MotionSensorMonitor::AddEnergy(sensorData);
     STANDBYSERVICE_LOGD("sensor motion: %{public}lf, threshold: %{public}d", MotionSensorMonitor::GetEnergy(),
@@ -84,6 +88,10 @@ void MotionSensorMonitor::RepeatAcceleromterCallback(SensorEvent *event)
         return;
     }
     STANDBYSERVICE_LOGD("periodly receive Acceleromter motion sensor callback");
+    if (event->data == NULL || event->dataLen < static_cast<uint32_t>(sizeof(AccelData))) {
+        STANDBYSERVICE_LOGD("repeat accelerometer event payload is too short, dataLen: %{public}u", event->dataLen);
+        return;
+    }
     AccelData* sensorData = reinterpret_cast<AccelData*>(event->data);
     MotionSensorMonitor::AddEnergy(sensorData);
     STANDBYSERVICE_LOGD("sensor motion: %{public}lf, threshold: %{public}lf", MotionSensorMonitor::GetEnergy(),
