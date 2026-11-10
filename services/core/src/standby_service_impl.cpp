@@ -72,6 +72,7 @@ const uint32_t ONE_SECOND = 1000;
 const std::string DUMP_ON_POWER_OVERUSED = "--poweroverused";
 const std::string DUMP_ON_ACTION_CHANGED = "--actionchanged";
 const int32_t EXTENSION_ERROR_CODE = 13500099;
+const uint64_t MAX_RESTORE_FILE_LENGTH = 128 * 1024 * 1024;
 }
 
 StandbyServiceImpl::StandbyServiceImpl() {}
@@ -555,9 +556,18 @@ ErrCode StandbyServiceImpl::OnRestore(MessageParcel& data, MessageParcel& reply)
         return ERR_INVALID_OPERATION;
     }
     const off_t fileLength = lseek(fd.Get(), 0, SEEK_END);
-    lseek(fd, 0, SEEK_SET);
+    lseek(fd.Get(), 0, SEEK_SET);
+    if (fileLength <= 0 || static_cast<uint64_t>(fileLength) > MAX_RESTORE_FILE_LENGTH) {
+        STANDBYSERVICE_LOGE("OnRestore fail: invalid file length %{public}lld", static_cast<long long>(fileLength));
+        if (!reply.WriteString(replyCode)) {
+            close(fd.Release());
+            return ERR_INVALID_OPERATION;
+        }
+        close(fd.Release());
+        return ERR_OK;
+    }
     buff.resize(fileLength);
-    const ssize_t len = read(fd, buff.data(), fileLength);
+    const ssize_t len = read(fd.Get(), buff.data(), fileLength);
     if (len == fileLength && fileLength != 0) {
         std::lock_guard<std::mutex> lock(backupRestoreMutex_);
         off_t offset = 0;
@@ -576,14 +586,9 @@ ErrCode StandbyServiceImpl::OnRestore(MessageParcel& data, MessageParcel& reply)
             }
             offset += static_cast<off_t>(sizeof(CloneFileHead) + head->fileSize);
         }
-    } else {
-        STANDBYSERVICE_LOGE("OnRestore fail: get file fail");
-        replyCode  = BuildBackupReplyCode(EXTENSION_ERROR_CODE);
     }
-
     if (!reply.WriteString(replyCode)) {
         close(fd.Release());
-        STANDBYSERVICE_LOGE("OnRestore fail: reply write fail!");
         return ERR_INVALID_OPERATION;
     }
     close(fd.Release());
@@ -1918,7 +1923,11 @@ void StandbyServiceImpl::DumpChangeConfigParam(const std::vector<std::string>& a
 
 void StandbyServiceImpl::DumpPushStrategyChange(const std::vector<std::string>& argsInStr, std::string& result)
 {
-    if (argsInStr[DUMP_SECOND_PARAM] == "--allowlist") {
+    if (argsInStr.size() > DUMP_SECOND_PARAM && argsInStr[DUMP_SECOND_PARAM] == "--allowlist") {
+        if (argsInStr.size() < DUMP_SIXTH_PARAM + 1) {
+            result += "not enough parameter for push strategy change\n";
+            return;
+        }
         StandbyStateSubscriber::GetInstance()->NotifyAllowChangedByCommonEvent(
             std::atoi(argsInStr[DUMP_THIRD_PARAM].c_str()), argsInStr[DUMP_FOURTH_PARAM],
             std::atoi(argsInStr[DUMP_FIFTH_PARAM].c_str()), argsInStr[DUMP_SIXTH_PARAM] == "true");
