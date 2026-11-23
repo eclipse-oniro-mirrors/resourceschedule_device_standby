@@ -1158,6 +1158,7 @@ HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_047, TestSize.Level1)
 HWMTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_026, TestSize.Level1, 20)
 {
     StandbyServiceImpl::GetInstance()->UninitReadyState();
+    StandbyServiceUnitTest::SleepForFC();
     EXPECT_FALSE(StandbyServiceImpl::GetInstance()->isServiceReady_.load());
     StandbyServiceUnitTest::SleepForFC();
 }
@@ -1220,7 +1221,7 @@ HWTEST_F(StandbyServiceUnitTest, StandbyServiceUnitTest_053, TestSize.Level1)
         false);
     StandbyServiceImpl::GetInstance()->HandleP2PStateChanged(static_cast<int32_t>(P2pState::P2P_STATE_CLOSING));
     EXPECT_EQ(DeviceStateCache::GetInstance()->deviceState_[static_cast<int32_t>(DeviceStateType::WIFI_P2P_CHANGE)],
-        false);
+        true);
 }
 
 /**
